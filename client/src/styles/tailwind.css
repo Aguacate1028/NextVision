@@ -1,0 +1,11 @@
+/* Borra la línea de @import 'tailwindcss' source(none); */
+
+@import 'tw-animate-css';
+
+/* Esto asegura que Tailwind busque clases en tus componentes */
+@layer base {
+  @font-face {
+    font-family: 'Geist';
+    src: url('../assets/fonts/GeistVF.woff2') format('woff2');
+  }
+}

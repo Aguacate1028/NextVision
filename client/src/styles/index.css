@@ -1,0 +1,4 @@
+/* index.css */
+@import "tailwindcss";
+@import './theme.css';    /* Tus variables primero */
+/*@import './tailwind.css';  Tus fuentes y animaciones después */
