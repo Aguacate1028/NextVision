@@ -22,6 +22,7 @@ import Clientes from './pages/empleado/Clientes';
 import Ventas from './pages/empleado/Ventas';
 import Consulta from './pages/empleado/Consulta';
 // Cliente
+import Perfil from './pages/cliente/Perfil';
 import Citas from './pages/cliente/Citas';
 import Historial from './pages/cliente/Historial';
 
@@ -55,7 +56,7 @@ user_metadata: {
 
 nombre: 'Dylan Cliente',
 
-rol: 'Administrador' // Cambia a 'Administrador' o 'Empleado' para probar otras vistas
+rol: 'Cliente' // Cambia a 'Administrador' o 'Empleado' para probar otras vistas
 
 }
 
@@ -144,6 +145,10 @@ rol: 'Administrador' // Cambia a 'Administrador' o 'Empleado' para probar otras 
         <Route path="/login" element={<AuthAccount onAuthSuccess={handleAuthSuccess} />} />
 
         {/* ---- R U T A S - C L I E N T E ---- */}
+        <Route 
+          path="/perfil" 
+          element={user && userRole === 'Cliente' ? <Perfil /> : <Navigate to="/login" />} 
+        />
         <Route 
           path="/citas" 
           element={user && userRole === 'Cliente' ? <Citas /> : <Navigate to="/login" />} 
