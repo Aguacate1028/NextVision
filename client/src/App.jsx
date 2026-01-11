@@ -46,13 +46,13 @@ setLoading(false);
 
 setUser({
 
-email: 'empleado@test.com',
+email: 'cliente@test.com',
 
 user_metadata: {
 
-nombre: 'Dylan Empleado',
+nombre: 'Dylan Cliente',
 
-rol: 'Empleado' // Cambia a 'Administrador' o 'Empleado' para probar otras vistas
+rol: 'Administrador' // Cambia a 'Administrador' o 'Empleado' para probar otras vistas
 
 }
 

@@ -21,6 +21,8 @@ En esta carpeta se encuentra todo lo que el Cliente y el Personal verán en sus 
     pages/: Contiene los archivos .jsx que representan las vistas completas del sistema (ej. Login.jsx, DashboardCliente.jsx, Catalogo.jsx, RegistroConsulta.jsx).
     styles/: Archivos de estilos donde aplicarás el color azul claro y las formas redondeadas para cumplir con el diseño de burbujas.
     assets/: Aquí guardarás las fotos de los armazones del catálogo y, por supuesto, las ilustraciones de tu mascota (el pulpo pequeño con lentes).
+    mocks/: datos temporales de prueba para revisión de funcionamiento.
+    UI/: Elemento graficos utilizados para las vistas.
 
 Carpeta /server (Backend en Node.js + Express)
 Esta carpeta maneja la lógica de negocio, la seguridad y la conexión a Supabase.
