@@ -1,55 +1,45 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // 1. Importar el hook
-import Header from '../components/Header';
-import Footer from '../components/Footer';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { Store, Search } from 'lucide-react';
+import { Store, Search, Eye, ShoppingCart } from 'lucide-react'; // Añadidos Eye y ShoppingCart
 import { ProductCard } from '../UI/ProductCard';
 
-export function CatalogPage({ isLoggedIn, user, userRole, onLogout, onLoginClick }) {
-  const navigate = useNavigate(); // 2. Inicializar el navigate
-export function CatalogPage() {
+// 1. Unificamos la función y sus props
+export function CatalogPage({ isLoggedIn }) {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('Todos');
 
   useEffect(() => {
     async function fetchProducts() {
+      setLoading(true);
       const { data, error } = await supabase
         .from('producto')
         .select('*, categoria(nombre)');
-      if (!error) setProducts(data);
+      
+      if (!error) setProducts(data || []);
       setLoading(false);
     }
     fetchProducts();
   }, []);
 
-  // 3. Función para manejar el clic en el botón
+  // 2. Manejo de acción del producto
   const handleProductAction = (productId) => {
     if (!isLoggedIn) {
-      // Si no hay sesión, mandarlo al login
       navigate('/login');
     } else {
-      // Si hay sesión, aquí iría la lógica para añadir al carrito o ver detalles
       console.log("Añadiendo al carrito o viendo producto:", productId);
+      // Aquí puedes añadir tu lógica de carrito
     }
   };
 
-  // Lógica de filtrado
+  // 3. Lógica de filtrado corregida
   const filteredProducts = filter === 'Todos' 
     ? products 
     : products.filter(p => p.categoria?.nombre === filter);
 
   return (
-    <div className="min-h-screen bg-[#F0F7FF] flex flex-col">
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">Nuestro Catálogo</h1>
-          <p className="text-slate-600">Encuentra los lentes perfectos para tu estilo y salud visual.</p>
-        </div>
-
-        {/* Barra de Filtros */}
-        <div className="flex flex-wrap justify-center gap-4 mb-10">
     <div className="min-h-screen bg-[#F0F7FF] flex flex-col font-sans">
       <main className="flex-1 container mx-auto px-4 py-8">
         
@@ -84,42 +74,8 @@ export function CatalogPage() {
           ))}
         </div>
 
-        {/* Grilla */}
+        {/* Estado de Carga */}
         {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {filteredProducts.map((product) => (
-              <div 
-                key={product.id_producto} 
-                className="bg-white rounded-[35px] p-6 shadow-xl shadow-blue-100/50 border border-white hover:scale-105 transition-transform group"
-              >
-                <div className="bg-slate-50 rounded-[25px] h-48 mb-4 flex items-center justify-center relative overflow-hidden">
-                  <Eye className="text-slate-200 w-20 h-20" />
-                </div>
-
-                <div className="space-y-2">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-blue-500">
-                    {product.categoria?.nombre || 'General'}
-                  </span>
-                  <h3 className="text-lg font-bold text-slate-900 truncate">{product.nombre}</h3>
-                  <p className="text-2xl font-black text-blue-600">${product.precio}</p>
-                  
-                  <div className="pt-4">
-                    {/* 4. Aplicar el onClick al botón */}
-                    <Button 
-                      onClick={() => handleProductAction(product.id_producto)}
-                      className="w-full rounded-full gap-2"
-                    >
-                      <ShoppingCart size={18} />
-                      {isLoggedIn ? 'Añadir al carrito' : 'Ver detalles'}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
           <div className="flex flex-col justify-center items-center py-20 gap-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             <p className="text-blue-600 font-bold animate-pulse">Cargando productos...</p>
@@ -129,13 +85,39 @@ export function CatalogPage() {
             {filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                 {filteredProducts.map((product) => (
-                  <ProductCard key={product.id_producto} product={product} />
+                  /* 4. Usamos el componente ProductCard o el diseño manual */
+                  <div 
+                    key={product.id_producto} 
+                    className="bg-white rounded-[35px] p-6 shadow-xl shadow-blue-100/50 border border-white hover:scale-105 transition-transform group"
+                  >
+                    <div className="bg-slate-50 rounded-[25px] h-48 mb-4 flex items-center justify-center relative overflow-hidden">
+                      <Eye className="text-slate-200 w-20 h-20" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-blue-500">
+                        {product.categoria?.nombre || 'General'}
+                      </span>
+                      <h3 className="text-lg font-bold text-slate-900 truncate">{product.nombre}</h3>
+                      <p className="text-2xl font-black text-blue-600">${product.precio}</p>
+                      
+                      <div className="pt-4">
+                        <button 
+                          onClick={() => handleProductAction(product.id_producto)}
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-full flex items-center justify-center gap-2 font-bold transition-colors"
+                        >
+                          <ShoppingCart size={18} />
+                          {isLoggedIn ? 'Añadir al carrito' : 'Ver detalles'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : (
               <div className="text-center py-20 bg-white rounded-[40px] border border-dashed border-slate-200">
                 <Search className="mx-auto text-slate-200 w-16 h-16 mb-4" />
-                <p className="text-slate-400 font-bold uppercase tracking-widest">No se encontraron productos en esta categoría</p>
+                <p className="text-slate-400 font-bold uppercase tracking-widest">No se encontraron productos</p>
               </div>
             )}
           </>
