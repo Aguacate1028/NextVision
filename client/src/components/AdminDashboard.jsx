@@ -7,8 +7,7 @@ import Footer from './Footer';
 export function AdminDashboard({ user, userRole, onLogout }) {
   return (
     <div className="min-h-screen flex flex-col bg-[#F0F7FF]">
-      <Header isLoggedIn={true} userRole={userRole} user={user} onLogout={onLogout} />
-      
+    
       <main className="flex-grow container mx-auto px-4 py-10">
         <div className="mb-8 border-l-4 border-blue-600 pl-4">
           <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Panel de Control</h1>
@@ -53,8 +52,6 @@ export function AdminDashboard({ user, userRole, onLogout }) {
           </Card>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

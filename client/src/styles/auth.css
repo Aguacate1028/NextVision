@@ -1,0 +1,164 @@
+/* Contenedor padre para que el Header y el Auth no choquen */
+.auth-page-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.auth-screen {
+    flex: 1; /* Ocupa el resto del espacio después del Header */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #f0f7ff;
+    padding: 20px;
+}
+
+.auth-main-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 50px;
+    max-width: 1200px;
+    width: 100%;
+}
+
+.video-section {
+    flex: 1;
+    min-width: 300px;
+    display: flex;
+    justify-content: center;
+}
+
+.mascot-video {
+    width: 120%; 
+    height: auto;
+    object-fit: contain;
+    mix-blend-mode: multiply; 
+    filter: brightness(1.05) contrast(1.1);
+}
+
+.drop-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Burbuja Principal */
+.drop {
+    position: relative;
+    width: 500px; 
+    height: 500px;
+    background: rgba(255, 255, 255, 0.4);
+    box-shadow: inset 20px 20px 20px rgba(0, 0, 0, 0.05),
+    25px 35px 20px rgba(0, 0, 0, 0.05),
+    25px 30px 30px rgba(0, 0, 0, 0.05),
+    inset -20px -20px 25px rgba(255, 255, 255, 0.9);
+    transition: 0.5s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 55% 45% 28% 72% / 35% 44% 56% 65%;
+    backdrop-filter: blur(10px);
+}
+
+.drop:hover {
+    border-radius: 50%;
+}
+
+.drop::before {
+    content: '';
+    position: absolute;
+    top: 50px; left: 85px;
+    width: 35px; height: 35px;
+    border-radius: 50%;
+    background: #fff;
+    opacity: 0.9;
+}
+
+.content h2 {
+    color: #1e40af; 
+    margin-bottom: 20px;
+    font-size: 2em;
+}
+
+.inputBox {
+    position: relative;
+    width: 280px;
+    margin-bottom: 20px;
+    background: #fff;
+    box-shadow: inset 2px 5px 10px rgba(0, 0, 0, 0.1),
+    inset -2px -5px 10px rgba(255, 255, 255, 1);
+    border-radius: 25px;
+}
+
+.inputBox input {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 12px 20px;
+}
+
+/* Botón Submit Burbuja */
+.submitBox {
+    background: #2563eb !important;
+    width: 180px !important;
+    transition: 0.5s;
+    cursor: pointer;
+    margin: 0 auto;
+}
+
+.submitBox:hover {
+    width: 210px !important;
+    background: #1d4ed8 !important;
+}
+
+.submitBox input {
+    color: #fff !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Botón de Cambio (Burbuja pequeña azul) */
+.btn-toggle-auth {
+    position: absolute;
+    top: -20px;
+    right: -30px;
+    width: 120px;
+    height: 120px;
+    background: #60a5fa;
+    border: none;
+    border-radius: 62% 38% 65% 35% / 73% 65% 35% 27% ;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: inset 10px 10px 10px rgba(255, 255, 255, 0.1),
+    15px 25px 10px rgba(0, 0, 0, 0.1);
+    transition: 0.3s;
+    font-size: 0.9em;
+    padding: 10px;
+}
+
+.btn-toggle-auth:hover {
+    border-radius: 50%;
+    transform: scale(1.1);
+}
+
+/* Responsividad básica */
+@media (max-width: 900px) {
+    .auth-main-container {
+        flex-direction: column;
+        gap: 20px;
+    }
+    .drop {
+        width: 350px;
+        height: 350px;
+    }
+    .inputBox {
+        width: 220px;
+    }
+}

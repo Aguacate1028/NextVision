@@ -9,7 +9,6 @@ export function ClientDashboard({ user, onLogout }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F0F7FF]">
-      <Header isLoggedIn={true} userRole="usuario" user={user} onLogout={onLogout} />
       
       <main className="flex-grow container mx-auto px-4 py-10">
         <div className="mb-8">
@@ -46,7 +45,6 @@ export function ClientDashboard({ user, onLogout }) {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }

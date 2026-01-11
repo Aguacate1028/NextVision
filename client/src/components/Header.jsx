@@ -1,46 +1,56 @@
 import React, { useState, useMemo } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Home, ShoppingBag, Calendar, FileClock, ClipboardList, 
   Users, BadgeDollarSign, LayoutDashboard, TrendingUp, 
-  LogOut, User, ChevronDown, Bell, Eye
+  LogOut, User, ChevronDown
 } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 
 const Header = ({ 
     isLoggedIn, 
     user,         
-    userRole, // 'usuario', 'empleado', 'administrador'
-    onLogout, 
-    onLoginClick, 
+    userRole, // 'Cliente', 'Empleado', 'Administrador'
+    onLogout 
 }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
-    // --- LÓGICA DE MENÚS POR ROL (Sincronizado con NextVision) ---
+    // --- MANEJADORES DE NAVEGACIÓN ---
+    // El logo solo redirige si NO está logueado
+    const handleLogoClick = () => {
+        if (!isLoggedIn) {
+            navigate('/');
+        }
+    };
+
+    const handleLoginClick = () => navigate('/login');
+
     const menuItems = useMemo(() => {
+        // Menú para usuarios no logueados (Público)
         if (!isLoggedIn) return [
             { id: 'home', label: 'Inicio', icon: Home, path: '/' },
-            { id: 'nosotros', label: 'Nosotros', icon: Eye, path: '/#about' },
+            { id: 'catalogo', label: 'Catálogo', icon: ShoppingBag, path: '/catalogo' },
         ];
 
+        // Menú dinámico según el ROL (Sincronizado con tu DB y Dashboard)
         const roles = {
-            usuario: [
+            Cliente: [
+                { id: 'u-dashboard', label: 'Panel', icon: LayoutDashboard, path: '/dashboard' },
                 { id: 'u-catalogo', label: 'Catálogo', icon: ShoppingBag, path: '/catalogo' },
-                { id: 'u-citas', label: 'Mis Citas', icon: Calendar, path: '/citas' },
                 { id: 'u-historial', label: 'Historial', icon: FileClock, path: '/historial' },
             ],
-            empleado: [
+            Empleado: [
+                { id: 'e-dashboard', label: 'Panel', icon: LayoutDashboard, path: '/dashboard' },
                 { id: 'e-consultas', label: 'Consultas', icon: ClipboardList, path: '/registro-consulta' },
-                { id: 'e-citas', label: 'Citas', icon: Calendar, path: '/gestion-citas' },
                 { id: 'e-clientes', label: 'Clientes', icon: Users, path: '/clientes' },
                 { id: 'e-ventas', label: 'Ventas', icon: BadgeDollarSign, path: '/ventas' },
             ],
-            administrador: [
-                { id: 'a-panel', label: 'Panel', icon: LayoutDashboard, path: '/admin-panel' },
+            Administrador: [
+                { id: 'a-dashboard', label: 'Panel', icon: LayoutDashboard, path: '/dashboard' },
                 { id: 'a-finanzas', label: 'Finanzas', icon: TrendingUp, path: '/finanzas' },
-                { id: 'a-catalogo', label: 'Inventario', icon: ShoppingBag, path: '/admin-inventario' },
+                { id: 'a-inventario', label: 'Inventario', icon: ShoppingBag, path: '/admin-inventario' },
             ]
         };
 
@@ -52,21 +62,29 @@ const Header = ({
         setShowProfileDropdown(false);
     };
 
-    const displayName = user?.nombre || 'Usuario'; 
+    // Obtenemos el nombre desde los metadatos de Supabase Auth
+    const displayName = user?.user_metadata?.nombre || 'Usuario'; 
 
     return (
         <header className="bg-white sticky top-0 z-50 shadow-sm border-b border-blue-50">
             <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
                 
-                {/* LOGO IZQUIERDA */}
-                <Link to="/" className="flex items-center gap-2">
-                    <img src={logoImg} alt="NextVision Logo" className="h-12 object-contain hover:scale-105 transition-transform" />
+                {/* LOGO (Desactivado si está logueado) */}
+                <div 
+                    onClick={handleLogoClick} 
+                    className={`flex items-center gap-2 ${!isLoggedIn ? 'cursor-pointer group' : 'cursor-default'}`}
+                >
+                    <img 
+                        src={logoImg} 
+                        alt="NextVision Logo" 
+                        className={`h-10 object-contain ${!isLoggedIn ? 'group-hover:scale-110 transition-transform' : ''}`} 
+                    />
                     <span className="text-xl font-black text-slate-900 hidden sm:block">
                         Next<span className="text-blue-600">Vision</span>
                     </span>
-                </Link>
+                </div>
 
-                {/* NAVEGACIÓN RESPONSIVE (OCULTA EN MÓVIL) */}
+                {/* NAVEGACIÓN CENTRAL */}
                 <nav className="hidden md:flex items-center gap-1">
                     {menuItems.map((item) => {
                         const active = location.pathname === item.path;
@@ -91,7 +109,7 @@ const Header = ({
                 <div className="flex items-center gap-4">
                     {!isLoggedIn ? (
                         <button 
-                            onClick={onLoginClick} 
+                            onClick={handleLoginClick} 
                             className="px-6 py-2 bg-blue-600 text-white rounded-full font-bold text-sm hover:bg-blue-700 transition-all shadow-md shadow-blue-100"
                         >
                             Iniciar Sesión
@@ -114,22 +132,19 @@ const Header = ({
                             
                             {showProfileDropdown && (
                                 <div className="absolute right-0 mt-3 w-48 bg-white rounded-[25px] shadow-xl border border-blue-50 py-3 z-[60] animate-in fade-in zoom-in duration-200 origin-top-right">
-                                    {/* SOLO EL USUARIO/PACIENTE VE PERFIL */}
-                                    {userRole === 'usuario' && (
-                                        <button 
-                                            onClick={() => handleNavigation('/perfil')} 
-                                            className="w-full flex items-center gap-3 px-5 py-2.5 text-sm text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-all font-bold"
-                                        >
-                                            <User size={16} /> Mi Perfil
-                                        </button>
-                                    )}
+                                    <button 
+                                        onClick={() => handleNavigation('/dashboard')} 
+                                        className="w-full flex items-center gap-3 px-5 py-2.5 text-sm text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-all font-bold"
+                                    >
+                                        <User size={16} /> Mi Perfil
+                                    </button>
                                     
                                     <button 
                                         onClick={() => { 
                                             setShowProfileDropdown(false);
                                             onLogout();
                                         }} 
-                                        className="w-full flex items-center gap-3 px-5 py-2.5 text-sm text-red-500 hover:bg-red-50 font-bold transition-all"
+                                        className="w-full flex items-center gap-3 px-5 py-2.5 text-sm text-red-500 hover:bg-red-50 font-bold transition-all border-t border-slate-50"
                                     >
                                         <LogOut size={16} /> Cerrar sesión
                                     </button>

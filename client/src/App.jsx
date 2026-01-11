@@ -1,12 +1,20 @@
 import { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { createClient } from '@supabase/supabase-js';
-import { Toaster } from './components/Toaster'; // Según tu captura está en components
-import { AuthComponent } from './components/AuthComponent';
-// Dashboards temporales o importados (asegúrate de que existan en components)
+
+// Importación de Componentes
+import Toaster from './components/Toaster';
+import Header from './components/Header';
+import Footer from './components/Footer';
+
+// Importación de Páginas
+import { HomePage } from './pages/Home';
+import { AuthAccount } from './pages/AuthAccount';
+import { CatalogPage } from './pages/Catalogo';
 import { ClientDashboard } from './components/ClientDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
-import { LandingPage } from './pages/Home'; // Apunta a Home.jsx en la carpeta pages
 
+// Configuración de Supabase
 const projectId = "elfjdjvqiyzbhmansocl";
 const publicAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVsZmpkanZxaXl6YmhtYW5zb2NsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2MjQwOTIsImV4cCI6MjA4MzIwMDA5Mn0.VWRqoccwsb4MEX7zsUwOUUFoFK6kE8ea4LMxdqNUCLA";
 
@@ -16,44 +24,49 @@ const supabase = createClient(
 );
 
 function App() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showAuth, setShowAuth] = useState(false);
 
+  // --- MOCK DE USUARIO PARA PRUEBAS ---
+  // Este efecto simula una sesión activa sin llamar a la base de datos
+  useEffect(() => {
+    setLoading(false);
+    setUser({
+      email: 'cliente@test.com',
+      user_metadata: {
+        nombre: 'Dylan Cliente',
+        rol: 'Cliente' // Cambia a 'Administrador' o 'Empleado' para probar otras vistas
+      }
+    });
+  }, []);
+
+  // Comentamos temporalmente la lógica real de Supabase para que no interfiera con el Mock
+  /*
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
       setUser(session?.user || null);
       setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
       setUser(session?.user || null);
-      if (session?.user) {
-        setShowAuth(false);
-      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+  */
 
-  const handleAuthSuccess = (userData, sessionData) => {
+  const handleAuthSuccess = (userData) => {
     setUser(userData);
-    setSession(sessionData);
-    setShowAuth(false);
+    navigate('/dashboard'); 
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    // Si usas el mock, simplemente limpia el estado
     setUser(null);
-    setSession(null);
-    setShowAuth(false);
-  };
-
-  const handleLoginClick = () => {
-    setShowAuth(true);
+    navigate('/');
+    // await supabase.auth.signOut(); // Descomentar cuando uses la DB real
   };
 
   if (loading) {
@@ -64,39 +77,55 @@ function App() {
     );
   }
 
-  if (showAuth && !user) {
-    return (
-      <>
-        <AuthComponent onAuthSuccess={handleAuthSuccess} />
-        <button
-          onClick={() => setShowAuth(false)}
-          className="fixed bottom-4 left-4 px-4 py-2 bg-white rounded-full shadow-lg text-sm text-blue-600 font-bold"
-        >
-          ← Volver
-        </button>
-        <Toaster />
-      </>
-    );
-  }
-
-  if (!user) {
-    return (
-      <>
-        <LandingPage onLoginClick={handleLoginClick} />
-        <Toaster />
-      </>
-    );
-  }
-
-  const userRole = user.user_metadata?.role || 'socio';
+  const userRole = user?.user_metadata?.rol || 'Cliente';
 
   return (
     <>
-      {userRole === 'administrador' || userRole === 'staff' ? (
-        <AdminDashboard user={user} onLogout={handleLogout} />
-      ) : (
-        <ClientDashboard user={user} onLogout={handleLogout} />
-      )}
+      <Header 
+        isLoggedIn={!!user} 
+        user={user} 
+        userRole={userRole} 
+        onLogout={handleLogout} 
+      />
+      
+      <Routes>
+        {/* HomePage necesita los datos para que su Header interno sepa quién está logueado */}
+        <Route path="/" element={
+          <HomePage 
+            isLoggedIn={!!user} 
+            user={user} 
+            userRole={userRole} 
+            onLogout={handleLogout} 
+          />
+        } />
+        
+        <Route path="/catalogo" element={
+          <CatalogPage 
+            isLoggedIn={!!user} 
+            user={user} 
+            userRole={userRole} 
+            onLogout={handleLogout} 
+          />
+        } />
+
+        {/* AuthAccount (Login) normalmente no lleva el menú completo, pero si lo requiere: */}
+        <Route path="/login" element={
+            !user ? <AuthAccount onAuthSuccess={handleAuthSuccess} /> : <Navigate to="/dashboard" />
+        } />
+
+        {/* Dashboards ya suelen recibir el user, pero asegúrate de pasar userRole */}
+        <Route path="/dashboard" element={
+          user ? (
+            userRole === 'Administrador' || userRole === 'Empleado' 
+              ? <AdminDashboard user={user} userRole={userRole} onLogout={handleLogout} /> 
+              : <ClientDashboard user={user} userRole={userRole} onLogout={handleLogout} />
+          ) : <Navigate to="/login" />
+        } />
+
+        {/* Redirección por defecto */}
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+      <Footer />
       <Toaster />
     </>
   );
