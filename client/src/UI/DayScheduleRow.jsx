@@ -36,7 +36,15 @@ export const DayScheduleRow = ({ config, onToggle }) => {
       <div className="flex items-center gap-6">
         <div className="hidden lg:flex flex-col items-end">
           <span className="text-[9px] font-black uppercase text-slate-400 mb-1 tracking-widest">Frecuencia</span>
-          <span className="text-xs font-black text-blue-600">{config.intervalo}</span>
+          <div className="flex items-center gap-2">
+            <input 
+              type="number"
+              disabled={!config.abierto}
+              defaultValue={parseInt(config.intervalo)}
+              className="w-16 bg-slate-50 border-none rounded-lg px-2 py-1 font-black text-blue-600 text-right outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-30 text-xs"
+            />
+            <span className="text-[10px] font-black text-blue-600 uppercase">min</span>
+          </div>
         </div>
         <button 
           onClick={onToggle}

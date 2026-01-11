@@ -18,6 +18,11 @@ import FinanzasPage from './pages/admin/Finanzas';
 import InventarioAdmin from './pages/admin/Inventario';
 import Empleados from './pages/admin/Empleados';
 import Horarios from './pages/admin/Horarios';
+//Empleado
+import Agenda from './pages/empleado/Agenda';
+import Clientes from './pages/empleado/Clientes';
+import Ventas from './pages/empleado/Ventas';
+import Consulta from './pages/empleado/Consulta';
 
 
 const projectId = "elfjdjvqiyzbhmansocl";
@@ -30,6 +35,35 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+   // --- MOCK DE USUARIO PARA PRUEBAS ---
+
+// Este efecto simula una sesión activa sin llamar a la base de datos
+
+useEffect(() => {
+
+setLoading(false);
+
+setUser({
+
+email: 'cliente@test.com',
+
+user_metadata: {
+
+nombre: 'Dylan Cliente',
+
+rol: 'Administrador' // Cambia a 'Administrador' o 'Empleado' para probar otras vistas
+
+}
+
+});
+
+}, []);
+
+
+// Comentamos temporalmente la lógica real de Supabase para que no interfiera con el Mock
+
+/* 
+  // --- LÓGICA DE SESIÓN REAL ---
   useEffect(() => {
     const checkSession = async () => {
       const savedUser = localStorage.getItem('sessionUser');
@@ -45,6 +79,8 @@ function App() {
   }, []);
 
   // 🔁 Lógica de redirección por Rol
+*/
+  // --- REDIRECCIÓN DINÁMICA POR ROL ---
   const redirectByRole = (role) => {
     switch (role) {
       case 'Administrador':
@@ -52,6 +88,10 @@ function App() {
         break;
       case 'Empleado':
         navigate('/empleado');
+        navigate('/agenda'); // O la ruta que definas para empleado
+        break;
+      case 'Cliente':
+        navigate('/catalogo');
         break;
       default:
         navigate('/catalogo');
@@ -100,7 +140,7 @@ function App() {
             ) : userRole === 'Administrador' ? (
               <Navigate to="/finanzas" replace /> // Redirige al Admin si ya está logueado
             ) : userRole === 'Empleado' ? (
-              <Navigate to="/empleado" replace />
+              <Navigate to="/agenda" replace />
             ) : (
               <Navigate to="/catalogo" replace />
             )
@@ -119,7 +159,7 @@ function App() {
 
         {/* 👷 RUTA DE EMPLEADO (Solo Empleado) */}
         <Route
-          path="/empleado"
+          path="/agenda"
           element={
             user && userRole === 'Empleado'
               ? <Empleados />
@@ -149,6 +189,47 @@ function App() {
         />
         
         <Route path="*" element={<Navigate to="/" />} />
+        {/* ---- R U T A S - P U B L I C A S */}
+        <Route path="/" element={<HomePage isLoggedIn={!!user} user={user} userRole={userRole} onLogout={handleLogout} />} />
+        <Route path="/catalogo" element={<CatalogPage isLoggedIn={!!user} user={user} userRole={userRole} onLogout={handleLogout} />} />
+        <Route path="/login" element={<AuthAccount onAuthSuccess={handleAuthSuccess} />} />
+
+        {/* ---- R U T A S - A D M I N I S T R A D O R */}
+        <Route 
+          path="/finanzas" 
+          element={user && userRole === 'Administrador' ? <FinanzasPage /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/admin-inventario" 
+          element={user && userRole === 'Administrador' ? <InventarioAdmin /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/admin-empleados" 
+          element={user && userRole === 'Administrador' ? <Empleados /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/admin-horarios" 
+          element={user && userRole === 'Administrador' ? <Horarios /> : <Navigate to="/login" />} 
+        />
+
+        {/* ---- R U T A S - E M P L E A D O ---- */}
+        <Route 
+          path="/agenda" 
+          element={user && userRole === 'Empleado' ? <Agenda /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/clientes" 
+          element={user && userRole === 'Empleado' ? <Clientes /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/ventas" 
+          element={user && (userRole === 'Empleado' || userRole === 'Administrador') ? <Ventas /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/consulta" 
+          element={user && (userRole === 'Empleado' || userRole === 'Administrador') ? <Consulta /> : <Navigate to="/login" />} 
+        />
+
       </Routes>
 
       <Footer />
