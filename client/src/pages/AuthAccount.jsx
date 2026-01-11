@@ -25,67 +25,79 @@ export function AuthAccount({ onAuthSuccess }) {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleLogin = async (e) => {
-        e.preventDefault();
-        setIsLoading(true);
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email: formData.email,
-            password: formData.password,
+   const handleLogin = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+        const response = await fetch('http://localhost:5000/api/users/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: formData.email,
+                password: formData.password,
+            })
         });
 
-        if (error) {
-            toast.error("Acceso denegado: " + error.message);
-        } else {
-            toast.success("¡Bienvenido a NextVision!");
-            onAuthSuccess(data.user, data.session);
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Credenciales incorrectas');
         }
+
+        // 1. Notificación de éxito
+        toast.success("¡Bienvenido de nuevo!");
+        
+        // 2. Avisar a la App que el usuario ya entró (si usas esa función)
+        if (onAuthSuccess) {
+            onAuthSuccess(result.user, result.session);
+        }
+
+        // 3. ¡LA REDIRECCIÓN! 
+        // Asegúrate de que '/' sea la ruta donde está tu Home.jsx
+        setTimeout(() => {
+            navigate('/'); 
+        },); // Un pequeño retraso para que el usuario vea el mensaje de éxito
+
+    } catch (error) {
+        toast.error("Error: " + error.message);
+    } finally {
         setIsLoading(false);
-    };
+    }
+};
 
     const handleSignup = async (e) => {
-        e.preventDefault();
-        setIsLoading(true);
-        
-        // 1. Crear en Supabase Auth con metadatos de rol
-        const { data, error } = await supabase.auth.signUp({
-            email: formData.email,
-            password: formData.password,
-            options: { 
-                data: { 
-                    nombre: formData.nombre,
-                    rol: 'Cliente' 
-                } 
-            }
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+        // LLAMADA A TU BACKEND (Servidor Node.js)
+        const response = await fetch('http://localhost:5000/api/users/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: formData.email,
+                password: formData.password,
+                nombre: formData.nombre,
+                apellidos: formData.apellidos
+            })
         });
 
-        if (error) {
-            toast.error(error.message);
-            setIsLoading(false);
-            return;
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Error en el servidor');
         }
 
-        // 2. Insertar en tu tabla 'cliente' de la base de datos (Postgres)
-        // Nota: Asegúrate que el nombre de la tabla sea 'cliente' (minúscula)
-        if (data.user) {
-            const { error: dbError } = await supabase
-                .from('cliente') 
-                .insert([{
-                    nombres: formData.nombre,
-                    apellidos: formData.apellidos,
-                    id_usuario: data.user.id // Vinculación con la tabla usuario/auth
-                }]);
-                
-            if (dbError) {
-                console.error("Error vinculando tabla cliente:", dbError);
-                toast.error("Error al guardar perfil de cliente.");
-            } else {
-                toast.success("Cuenta creada. ¡Por favor inicia sesión!");
-                setIsLogin(true);
-            }
-        }
-        
+        toast.success("Cuenta creada en el servidor. ¡Inicia sesión!");
+        setIsLogin(true);
+
+    } catch (error) {
+        toast.error(error.message);
+    } finally {
         setIsLoading(false);
-    };
+    }
+};
 
     return (
         <div className="auth-page-container">

@@ -28,45 +28,41 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // --- MOCK DE USUARIO PARA PRUEBAS ---
-  // Este efecto simula una sesión activa sin llamar a la base de datos
+  // 1. REEMPLAZAMOS EL MOCK: Ahora busca si hay una sesión guardada en el navegador
   useEffect(() => {
+    const savedSession = localStorage.getItem('sessionUser');
+    if (savedSession) {
+      setUser(JSON.parse(savedSession));
+    }
     setLoading(false);
-    setUser({
-      email: 'cliente@test.com',
-      user_metadata: {
-        nombre: 'Dylan Cliente',
-        rol: 'Cliente' // Cambia a 'Administrador' o 'Empleado' para probar otras vistas
-      }
-    });
   }, []);
 
-  // Comentamos temporalmente la lógica real de Supabase para que no interfiera con el Mock
-  /*
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user || null);
-      setLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-  */
-
+  // 2. ACTUALIZAMOS EL ÉXITO: Recibe los datos del servidor y los guarda
   const handleAuthSuccess = (userData) => {
-    setUser(userData);
-    navigate('/dashboard'); 
+    const sessionData = {
+      user_metadata: { 
+      // Priorizamos el nombre real que viene del servidor
+      nombre: userData.nombre, 
+      rol: userData.rol 
+      }
+    };
+    setUser(sessionData);
+    localStorage.setItem('sessionUser', JSON.stringify(sessionData));
+    navigate('/');
+    
+    // Redirigimos según el rol
+    if (userData.rol === 'Administrador' || userData.rol === 'Empleado') {
+      navigate('/dashboard');
+    } else {
+      navigate('/');
+    }
   };
 
-  const handleLogout = async () => {
-    // Si usas el mock, simplemente limpia el estado
+  // 3. LOGOUT REAL: Limpia el estado y el almacenamiento
+  const handleLogout = () => {
     setUser(null);
+    localStorage.removeItem('sessionUser');
     navigate('/');
-    // await supabase.auth.signOut(); // Descomentar cuando uses la DB real
   };
 
   if (loading) {
@@ -77,10 +73,12 @@ function App() {
     );
   }
 
+  // Extraemos el rol de los datos reales (por defecto Cliente si algo falla)
   const userRole = user?.user_metadata?.rol || 'Cliente';
 
   return (
     <>
+      {/* Mantenemos tus componentes de Header/Footer tal cual */}
       <Header 
         isLoggedIn={!!user} 
         user={user} 
@@ -89,31 +87,19 @@ function App() {
       />
       
       <Routes>
-        {/* HomePage necesita los datos para que su Header interno sepa quién está logueado */}
+        {/* Mantenemos todas tus rutas originales intactas */}
         <Route path="/" element={
-          <HomePage 
-            isLoggedIn={!!user} 
-            user={user} 
-            userRole={userRole} 
-            onLogout={handleLogout} 
-          />
+          <HomePage isLoggedIn={!!user} user={user} userRole={userRole} onLogout={handleLogout} />
         } />
         
         <Route path="/catalogo" element={
-          <CatalogPage 
-            isLoggedIn={!!user} 
-            user={user} 
-            userRole={userRole} 
-            onLogout={handleLogout} 
-          />
+          <CatalogPage isLoggedIn={!!user} user={user} userRole={userRole} onLogout={handleLogout} />
         } />
 
-        {/* AuthAccount (Login) normalmente no lleva el menú completo, pero si lo requiere: */}
         <Route path="/login" element={
-            !user ? <AuthAccount onAuthSuccess={handleAuthSuccess} /> : <Navigate to="/dashboard" />
+            !user ? <AuthAccount onAuthSuccess={handleAuthSuccess} /> : <Navigate to="/" />
         } />
 
-        {/* Dashboards ya suelen recibir el user, pero asegúrate de pasar userRole */}
         <Route path="/dashboard" element={
           user ? (
             userRole === 'Administrador' || userRole === 'Empleado' 
@@ -122,7 +108,6 @@ function App() {
           ) : <Navigate to="/login" />
         } />
 
-        {/* Redirección por defecto */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
       <Footer />

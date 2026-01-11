@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import { testConnection } from './supabase.js';
+import userRoutes from './routes/userRoutes.js';
+
 
 const app = express();
 
@@ -9,6 +11,8 @@ const app = express();
 app.use(cors()); // Permite peticiones del client
 app.use(express.json()); // Permite recibir cuerpos JSON (para agendar citas o ventas)
 app.use(morgan('dev')); // Loguea las peticiones en consola para depuración
+
+app.use('/api/users', userRoutes);
 
 const PORT = process.env.PORT || 5000;
 
