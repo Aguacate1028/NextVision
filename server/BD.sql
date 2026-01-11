@@ -98,8 +98,8 @@ CREATE TABLE horario_atencion (
     id_horario SERIAL PRIMARY KEY,
     dia_semana INT NOT NULL, -- 0 para Domingo, 1 para Lunes, etc.
     dia_nombre VARCHAR(15) NOT NULL, -- 'Lunes', 'Martes'...
-    apertura TIME NOT NULL,
-    cierre TIME NOT NULL,
+    apertura varchar NOT NULL,
+    cierre varchar NOT NULL,
     intervalo_minutos INT DEFAULT 30, -- Para definir citas cada 30, 45 o 60 min
     esta_activo BOOLEAN DEFAULT true, -- Para marcar si la óptica abre ese día
     ultima_modificacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP

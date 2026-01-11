@@ -280,3 +280,64 @@ export const getProductos = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+export const getHorarios = async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('horario_atencion')
+            .select('*')
+            .order('dia_semana', { ascending: true });
+
+        if (error) throw error;
+
+        res.status(200).json(data);
+    } catch (error) {
+        console.error("Error al obtener horarios:", error.message);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+export const saveHorarios = async (req, res) => {
+  const { horarios } = req.body;
+
+  try {
+    if (!horarios || !Array.isArray(horarios)) {
+      return res.status(400).json({ error: "Datos no válidos" });
+    }
+
+    // En Supabase, para actualizar varios registros, lo más eficiente 
+    // es hacer una promesa por cada actualización.
+    const updates = horarios.map((h) => 
+      supabase
+        .from('horario_atencion')
+        .update({
+          apertura: h.apertura,
+          cierre: h.cierre,
+          intervalo_minutos: h.intervalo_minutos,
+          esta_activo: h.esta_activo,
+          ultima_modificacion: new Date().toISOString() // Sincroniza la hora
+        })
+        .eq('id_horario', h.id_horario)
+    );
+
+    // Ejecutamos todas las actualizaciones en paralelo
+    const results = await Promise.all(updates);
+
+    // Verificamos si alguna dio error
+    const firstError = results.find(r => r.error);
+    if (firstError) throw firstError.error;
+
+    res.status(200).json({ 
+      success: true, 
+      message: "¡Agenda actualizada en Supabase con éxito!" 
+    });
+
+  } catch (error) {
+    console.error("Error en Supabase:", error.message);
+    res.status(500).json({ 
+      error: "Error al guardar en Supabase", 
+      detalle: error.message 
+    });
+  }
+};
+

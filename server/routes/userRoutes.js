@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { registrarUsuario, loginUsuario, getPersonal, updatePersonal, createPersonal, getCategorias, createCategoria, updateCategoria, 
-    deleteCategoria, getProductos } from '../controllers/userController.js';
+    deleteCategoria, getProductos,getHorarios, saveHorarios } from '../controllers/userController.js';
 
 const router = Router();
 
@@ -18,5 +18,8 @@ router.put('/:id', updateCategoria);
 router.delete('/:id', deleteCategoria);
 
 router.get('/productos', getProductos);
+
+router.get('/horarios', getHorarios);
+router.post('/horarios', saveHorarios);
 
 export default router;
