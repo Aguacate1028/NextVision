@@ -96,6 +96,7 @@ const Inventario = () => {
         onClose={() => setShowModal(false)} 
         activeTab={activeTab} 
         editingItem={editingItem}
+        categorias={items.categorias}
       />
     </div>
   );
