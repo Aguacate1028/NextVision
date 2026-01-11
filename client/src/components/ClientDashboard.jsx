@@ -1,8 +1,6 @@
 import React from 'react';
 import { Button } from '../UI/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../UI/card';
-import Header from './Header';
-import Footer from './Footer';
 
 export function ClientDashboard({ user, onLogout }) {
   const displayName = user?.user_metadata?.nombre || 'Paciente';

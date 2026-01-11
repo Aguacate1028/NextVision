@@ -3,8 +3,6 @@ import { Button } from '../UI/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../UI/card';
 import { Badge } from '../UI/badge';
 import mascotImg from '../assets/mascota.png';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
 import { 
   Eye, Calendar, ShoppingBag, Award, Users, 
   Target, Sparkles, TrendingUp, Star 

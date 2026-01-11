@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabaseClient';
 import { toast } from 'sonner';
 import mascotVideo from '../assets/mascota.mp4';
 import '../styles/auth.css';
-import  Header  from '../components/Header'; // Asegúrate que la exportación coincida
 
 export function AuthAccount({ onAuthSuccess }) {
     const navigate = useNavigate(); // <-- Inicialización obligatoria
@@ -55,9 +54,18 @@ export function AuthAccount({ onAuthSuccess }) {
 
         // 3. ¡LA REDIRECCIÓN! 
         // Asegúrate de que '/' sea la ruta donde está tu Home.jsx
+
+        const role = result.user?.user_metadata?.rol || 'Cliente';
+
         setTimeout(() => {
-            navigate('/'); 
-        },); // Un pequeño retraso para que el usuario vea el mensaje de éxito
+            if (role === 'Administrador') {
+                navigate('/finanzas');
+            } else if (role === 'Empleado') {
+                navigate('/Empleado');
+            } else {
+                navigate('/catalogo'); // O '/' si quieres el Home para clientes
+            }
+        }, 500);
 
     } catch (error) {
         toast.error("Error: " + error.message);

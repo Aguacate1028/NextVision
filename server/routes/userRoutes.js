@@ -1,10 +1,19 @@
 import { Router } from 'express';
-import { registrarUsuario, loginUsuario } from '../controllers/userController.js';
+import { registrarUsuario, loginUsuario, getPersonal, updatePersonal, createPersonal, getCategorias, createCategoria, updateCategoria, deleteCategoria } from '../controllers/userController.js';
 
 const router = Router();
 
 //rutyas
 router.post('/register', registrarUsuario);
 router.post('/login', loginUsuario);
+
+router.get('/personal', getPersonal);
+router.put('/personal/:id', updatePersonal);
+router.post('/personal', createPersonal);
+
+router.get('/', getCategorias);
+router.post('/', createCategoria);
+router.put('/:id', updateCategoria);
+router.delete('/:id', deleteCategoria);
 
 export default router;
