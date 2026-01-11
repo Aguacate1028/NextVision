@@ -34,9 +34,9 @@ const Header = ({
 
         const roles = {
             Cliente: [
-                { id: 'u-dashboard', label: 'Panel', icon: LayoutDashboard, path: '/dashboard' },
-                { id: 'u-catalogo', label: 'Catálogo', icon: ShoppingBag, path: '/catalogo' },
+                { id: 'u-citas', label: 'Citas', icon: Calendar, path: '/citas' },
                 { id: 'u-historial', label: 'Historial', icon: FileClock, path: '/historial' },
+                { id: 'u-catalogo', label: 'Catálogo', icon: ShoppingBag, path: '/catalogo' },
             ],
             Empleado: [
                 { id: 'e-agenda', label: 'Agenda', icon: Calendar, path: '/agenda' },
