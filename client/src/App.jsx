@@ -23,6 +23,9 @@ import Agenda from './pages/empleado/Agenda';
 import Clientes from './pages/empleado/Clientes';
 import Ventas from './pages/empleado/Ventas';
 import Consulta from './pages/empleado/Consulta';
+// Cliente
+import Citas from './pages/cliente/Citas';
+import Historial from './pages/cliente/Historial';
 
 
 const projectId = "elfjdjvqiyzbhmansocl";
@@ -193,6 +196,16 @@ rol: 'Administrador' // Cambia a 'Administrador' o 'Empleado' para probar otras 
         <Route path="/" element={<HomePage isLoggedIn={!!user} user={user} userRole={userRole} onLogout={handleLogout} />} />
         <Route path="/catalogo" element={<CatalogPage isLoggedIn={!!user} user={user} userRole={userRole} onLogout={handleLogout} />} />
         <Route path="/login" element={<AuthAccount onAuthSuccess={handleAuthSuccess} />} />
+
+        {/* ---- R U T A S - C L I E N T E ---- */}
+        <Route 
+          path="/citas" 
+          element={user && userRole === 'Cliente' ? <Citas /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/historial" 
+          element={user && userRole === 'Cliente' ? <Historial /> : <Navigate to="/login" />} 
+        />
 
         {/* ---- R U T A S - A D M I N I S T R A D O R */}
         <Route 

@@ -68,6 +68,30 @@ export const InventoryModal = ({ isOpen, onClose, activeTab, editingItem, onSucc
         <button onClick={onClose} className="absolute top-10 right-10 text-slate-300 hover:text-red-500 transition-colors">
           <X size={28}/>
         </button>
+import React, { useState, useRef } from 'react';
+import { X, Check, Upload, Image as ImageIcon } from 'lucide-react';
+
+export const InventoryModal = ({ isOpen, onClose, activeTab, editingItem }) => {
+  const [imagePreview, setImagePreview] = useState(editingItem?.imagen_producto || null);
+  const fileInputRef = useRef(null);
+
+  if (!isOpen) return null;
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="bg-white w-full max-w-xl rounded-[3rem] p-12 shadow-2xl relative border border-white overflow-y-auto max-h-[90vh]">
+        <button onClick={onClose} className="absolute top-10 right-10 text-slate-300 hover:text-red-500 transition-colors"><X size={28}/></button>
         
         <header className="mb-10">
           <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-2 block italic">Registro de Datos</span>
@@ -77,6 +101,34 @@ export const InventoryModal = ({ isOpen, onClose, activeTab, editingItem, onSucc
         </header>
         
         <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-6">
+          {/* SECCIÓN DE IMAGEN (Solo para productos) */}
+          {activeTab === 'productos' && (
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-slate-400 ml-5 tracking-widest">Imagen del Producto</label>
+              <div 
+                onClick={() => fileInputRef.current.click()}
+                className="w-full h-40 bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2rem] flex flex-col items-center justify-center cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-all overflow-hidden group"
+              >
+                {imagePreview ? (
+                  <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <>
+                    <Upload className="text-slate-300 group-hover:text-blue-400 mb-2" size={32} />
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Subir Fotografía</span>
+                  </>
+                )}
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleImageChange} 
+                  className="hidden" 
+                  accept="image/*"
+                />
+              </div>
+            </div>
+          )}
+
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase text-slate-400 ml-5 tracking-widest">Nombre Principal</label>
             <input 
