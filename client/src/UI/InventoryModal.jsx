@@ -5,6 +5,11 @@ import toast from 'react-hot-toast';
 export const InventoryModal = ({ isOpen, onClose, activeTab, editingItem, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
+import React, { useState, useRef } from 'react';
+import { X, Check, Upload, Image as ImageIcon, ChevronDown } from 'lucide-react';
+
+export const InventoryModal = ({ isOpen, onClose, activeTab, editingItem, categorias = [] }) => {
+  const [imagePreview, setImagePreview] = useState(editingItem?.imagen_producto || null);
   const fileInputRef = useRef(null);
 
   // Estado inicial del formulario adaptado a ambas tablas
@@ -136,6 +141,27 @@ export const InventoryModal = ({ isOpen, onClose, activeTab, editingItem, onSucc
               placeholder="Ej: Armazones Premium" 
             />
           </div>
+
+          {/* SELECT DE CATEGORÍA (Solo para productos) */}
+          {activeTab === 'productos' && (
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-slate-400 ml-5 tracking-widest">Categoría</label>
+              <div className="relative">
+                <select 
+                  defaultValue={editingItem?.id_categoria || ''}
+                  className="w-full bg-blue-50 border-none rounded-[1.5rem] px-8 py-4 font-black text-blue-600 outline-none appearance-none cursor-pointer shadow-sm focus:ring-2 focus:ring-blue-200 transition-all"
+                >
+                  <option value="" disabled>Seleccionar categoría...</option>
+                  {categorias.map(cat => (
+                    <option key={cat.id_categoria} value={cat.id_categoria}>
+                      {cat.nombre}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={18} className="absolute right-6 top-1/2 -translate-y-1/2 text-blue-400 pointer-events-none" />
+              </div>
+            </div>
+          )}
 
           {activeTab === 'productos' && (
             <div className="grid grid-cols-2 gap-4">

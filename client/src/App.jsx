@@ -25,6 +25,8 @@ import Ventas from './pages/empleado/Ventas';
 import Consulta from './pages/empleado/Consulta';
 
 // --- SECCIÓN CLIENTE ---
+// Cliente
+import Perfil from './pages/cliente/Perfil';
 import Citas from './pages/cliente/Citas';
 import Historial from './pages/cliente/Historial';
 
@@ -100,6 +102,10 @@ function App() {
         />
 
         {/* ---- RUTAS CLIENTE ---- */}
+        <Route 
+          path="/perfil" 
+          element={user && userRole === 'Cliente' ? <Perfil /> : <Navigate to="/login" />} 
+        />
         <Route 
           path="/citas" 
           element={user && userRole === 'Cliente' ? <Citas /> : <Navigate to="/login" />} 

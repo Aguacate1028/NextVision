@@ -170,7 +170,11 @@ const fetchInventario = async () => {
         onClose={() => setShowModal(false)} 
         activeTab={activeTab} 
         editingItem={editingItem}
+<<<<<<< HEAD
         onSuccess={fetchInventario} // Esta función recarga la lista al guardar
+=======
+        categorias={items.categorias}
+>>>>>>> origin/main
       />
     </div>
   );
