@@ -68,6 +68,7 @@ CREATE TABLE producto (
     descripcion TEXT,
     precio DECIMAL(10,2) NOT NULL,
     stock INT NOT NULL DEFAULT 0,
+    imagen_producto text,
     id_categoria INT REFERENCES categoria(id_categoria)
 );
 

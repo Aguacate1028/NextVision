@@ -16,6 +16,11 @@ import FinanzasPage from './pages/admin/Finanzas';
 import InventarioAdmin from './pages/admin/Inventario';
 import Empleados from './pages/admin/Empleados';
 import Horarios from './pages/admin/Horarios';
+//Empleado
+import Agenda from './pages/empleado/Agenda';
+import Clientes from './pages/empleado/Clientes';
+import Ventas from './pages/empleado/Ventas';
+import Consulta from './pages/empleado/Consulta';
 
 // Configuración de Supabase
 const projectId = "elfjdjvqiyzbhmansocl";
@@ -31,6 +36,34 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+   // --- MOCK DE USUARIO PARA PRUEBAS ---
+
+// Este efecto simula una sesión activa sin llamar a la base de datos
+
+useEffect(() => {
+
+setLoading(false);
+
+setUser({
+
+email: 'empleado@test.com',
+
+user_metadata: {
+
+nombre: 'Dylan Empleado',
+
+rol: 'Empleado' // Cambia a 'Administrador' o 'Empleado' para probar otras vistas
+
+}
+
+});
+
+}, []);
+
+
+// Comentamos temporalmente la lógica real de Supabase para que no interfiera con el Mock
+
+/* 
   // --- LÓGICA DE SESIÓN REAL ---
   useEffect(() => {
     // 1. Verificar sesión actual al cargar
@@ -49,7 +82,7 @@ function App() {
 
     return () => subscription.unsubscribe();
   }, []);
-
+*/
   // --- REDIRECCIÓN DINÁMICA POR ROL ---
   const redirectByRole = (role) => {
     switch (role) {
@@ -57,7 +90,7 @@ function App() {
         navigate('/finanzas'); // O a tu panel principal de admin
         break;
       case 'Empleado':
-        navigate('/admin-inventario'); // O la ruta que definas para empleado
+        navigate('/agenda'); // O la ruta que definas para empleado
         break;
       case 'Cliente':
         navigate('/catalogo');
@@ -105,16 +138,7 @@ function App() {
         {/* ---- R U T A S - P U B L I C A S */}
         <Route path="/" element={<HomePage isLoggedIn={!!user} user={user} userRole={userRole} onLogout={handleLogout} />} />
         <Route path="/catalogo" element={<CatalogPage isLoggedIn={!!user} user={user} userRole={userRole} onLogout={handleLogout} />} />
-        
-        {/* LOGIN CON REDIRECCIÓN INTELIGENTE */}
-        <Route path="/login" element={
-          !user ? (
-            <AuthAccount onAuthSuccess={handleAuthSuccess} />
-          ) : (
-            // Si el usuario ya está logueado e intenta entrar a /login, lo mandamos a su sitio
-            userRole === 'Administrador' ? <Navigate to="/finanzas" /> : <Navigate to="/catalogo" />
-          )
-        } />
+        <Route path="/login" element={<AuthAccount onAuthSuccess={handleAuthSuccess} />} />
 
         {/* ---- R U T A S - A D M I N I S T R A D O R */}
         <Route 
@@ -123,7 +147,7 @@ function App() {
         />
         <Route 
           path="/admin-inventario" 
-          element={user && (userRole === 'Administrador' || userRole === 'Empleado') ? <InventarioAdmin /> : <Navigate to="/login" />} 
+          element={user && userRole === 'Administrador' ? <InventarioAdmin /> : <Navigate to="/login" />} 
         />
         <Route 
           path="/admin-empleados" 
@@ -133,6 +157,25 @@ function App() {
           path="/admin-horarios" 
           element={user && userRole === 'Administrador' ? <Horarios /> : <Navigate to="/login" />} 
         />
+
+        {/* ---- R U T A S - E M P L E A D O ---- */}
+        <Route 
+          path="/agenda" 
+          element={user && userRole === 'Empleado' ? <Agenda /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/clientes" 
+          element={user && userRole === 'Empleado' ? <Clientes /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/ventas" 
+          element={user && (userRole === 'Empleado' || userRole === 'Administrador') ? <Ventas /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/consulta" 
+          element={user && (userRole === 'Empleado' || userRole === 'Administrador') ? <Consulta /> : <Navigate to="/login" />} 
+        />
+
       </Routes>
       <Footer />
       <Toaster />

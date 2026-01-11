@@ -39,9 +39,10 @@ const Header = ({
                 { id: 'u-historial', label: 'Historial', icon: FileClock, path: '/historial' },
             ],
             Empleado: [
-                { id: 'e-consultas', label: 'Consultas', icon: ClipboardList, path: '/registro-consulta' },
+                { id: 'e-agenda', label: 'Agenda', icon: Calendar, path: '/agenda' },
                 { id: 'e-clientes', label: 'Clientes', icon: Users, path: '/clientes' },
                 { id: 'e-ventas', label: 'Ventas', icon: BadgeDollarSign, path: '/ventas' },
+                { id: 'e-consulta', label: 'Consulta', icon: ClipboardList, path: '/consulta' },
             ],
             Administrador: [
                 { id: 'a-finanzas', label: 'Finanzas', icon: TrendingUp, path: '/finanzas' },
