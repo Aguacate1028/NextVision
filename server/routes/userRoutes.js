@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { registrarUsuario, loginUsuario, getPersonal, updatePersonal, createPersonal, getCategorias, createCategoria, updateCategoria, deleteCategoria } from '../controllers/userController.js';
+import { registrarUsuario, loginUsuario, getPersonal, updatePersonal, createPersonal, getCategorias, createCategoria, updateCategoria, 
+    deleteCategoria, getProductos } from '../controllers/userController.js';
 
 const router = Router();
 
@@ -15,5 +16,7 @@ router.get('/', getCategorias);
 router.post('/', createCategoria);
 router.put('/:id', updateCategoria);
 router.delete('/:id', deleteCategoria);
+
+router.get('/productos', getProductos);
 
 export default router;

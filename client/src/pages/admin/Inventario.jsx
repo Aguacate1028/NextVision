@@ -14,26 +14,31 @@ const Inventario = () => {
   const [editingItem, setEditingItem] = useState(null);
 
   // --- 1. CARGA DE DATOS DESDE EL BACKEND ---
-  const fetchInventario = async () => {
-    try {
-      setLoading(true);
-      const resCat = await fetch('http://localhost:5000/api/users/');
-      const dataCat = await resCat.json();
+const fetchInventario = async () => {
+  try {
+    setLoading(true);
+    
+    // Ejecutamos ambas peticiones en paralelo para que sea más rápido
+    const [resCat, resProd] = await Promise.all([
+      fetch('http://localhost:5000/api/users/'),
+      fetch('http://localhost:5000/api/users/productos')
+    ]);
 
-      // Debugging: Mira esto en la consola del navegador (F12)
-      console.log("Datos de categorías:", dataCat);
+    const dataCat = await resCat.json();
+    const dataProd = await resProd.json();
 
-      setItems(prev => ({
-        ...prev,
-        // Nos aseguramos de que sea un array, si no, ponemos array vacío
-        categorias: Array.isArray(dataCat) ? dataCat : []
-      }));
-    } catch (error) {
-      console.error("Error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setItems({
+      categorias: Array.isArray(dataCat) ? dataCat : [],
+      productos: Array.isArray(dataProd) ? dataProd : []
+    });
+    
+  } catch (error) {
+    console.error("Error cargando inventario:", error);
+    toast.error("Error al conectar con el servidor");
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchInventario();
