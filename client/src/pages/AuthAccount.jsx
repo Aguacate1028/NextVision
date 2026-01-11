@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabaseClient';
 import { toast } from 'sonner';
 import mascotVideo from '../assets/mascota.mp4';
 import '../styles/auth.css';
-import  Header  from '../components/Header'; // Asegúrate que la exportación coincida
 
 export function AuthAccount({ onAuthSuccess }) {
     const navigate = useNavigate(); // <-- Inicialización obligatoria

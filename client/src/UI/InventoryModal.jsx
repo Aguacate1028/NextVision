@@ -1,0 +1,69 @@
+import React from 'react';
+import { X, Check } from 'lucide-react';
+
+export const InventoryModal = ({ isOpen, onClose, activeTab, editingItem }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="bg-white w-full max-w-xl rounded-[3rem] p-12 shadow-2xl relative border border-white">
+        <button onClick={onClose} className="absolute top-10 right-10 text-slate-300 hover:text-red-500 transition-colors"><X size={28}/></button>
+        
+        <header className="mb-10">
+          <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-2 block italic">Registro de Datos</span>
+          <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">
+            {editingItem ? 'Editar' : 'Nueva'} {activeTab === 'productos' ? 'Pieza' : 'Categoría'}
+          </h2>
+        </header>
+        
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase text-slate-400 ml-5 tracking-widest">Nombre Principal</label>
+            <input 
+              defaultValue={editingItem?.nombre || ''}
+              type="text" 
+              className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-8 py-5 font-bold text-slate-700 outline-none focus:border-blue-100 focus:bg-white transition-all shadow-inner" 
+              placeholder="Ej: Ray-Ban Aviator / Armazones Premium" 
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase text-slate-400 ml-5 tracking-widest">Descripción corta</label>
+            <textarea 
+              defaultValue={editingItem?.descripcion || ''}
+              className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-8 py-5 font-bold text-slate-700 outline-none focus:border-blue-100 focus:bg-white transition-all shadow-inner h-24 resize-none" 
+              placeholder="Detalles técnicos o de estilo..." 
+            />
+          </div>
+
+          {activeTab === 'productos' && (
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-slate-400 ml-5 tracking-widest">Precio Final ($)</label>
+                <input 
+                  defaultValue={editingItem?.precio || ''}
+                  type="number" 
+                  className="w-full bg-slate-50 border-none rounded-[1.5rem] px-8 py-5 font-black text-slate-900 text-xl outline-none shadow-inner" 
+                  placeholder="0.00" 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-slate-400 ml-5 tracking-widest">Stock Disponible</label>
+                <input 
+                  defaultValue={editingItem?.stock || ''}
+                  type="number" 
+                  className="w-full bg-slate-50 border-none rounded-[1.5rem] px-8 py-5 font-black text-slate-900 text-xl outline-none shadow-inner" 
+                  placeholder="0" 
+                />
+              </div>
+            </div>
+          )}
+
+          <button className="w-full bg-blue-600 text-white py-6 rounded-[1.5rem] font-black uppercase tracking-[0.25em] shadow-2xl shadow-blue-200 hover:bg-blue-700 hover:-translate-y-1 transition-all mt-6 flex items-center justify-center gap-3">
+            <Check size={20}/> {editingItem ? 'Actualizar' : 'Confirmar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

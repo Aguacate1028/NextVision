@@ -11,8 +11,11 @@ import Footer from './components/Footer';
 import { HomePage } from './pages/Home';
 import { AuthAccount } from './pages/AuthAccount';
 import { CatalogPage } from './pages/Catalogo';
-import { ClientDashboard } from './components/ClientDashboard';
-import { AdminDashboard } from './components/AdminDashboard';
+// Administrador
+import FinanzasPage from './pages/admin/Finanzas';
+import InventarioAdmin from './pages/admin/Inventario';
+import Empleados from './pages/admin/Empleados';
+import Horarios from './pages/admin/Horarios';
 
 // Configuración de Supabase
 const projectId = "elfjdjvqiyzbhmansocl";
@@ -28,45 +31,52 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // --- MOCK DE USUARIO PARA PRUEBAS ---
-  // Este efecto simula una sesión activa sin llamar a la base de datos
+  // --- LÓGICA DE SESIÓN REAL ---
   useEffect(() => {
-    setLoading(false);
-    setUser({
-      email: 'cliente@test.com',
-      user_metadata: {
-        nombre: 'Dylan Cliente',
-        rol: 'Cliente' // Cambia a 'Administrador' o 'Empleado' para probar otras vistas
-      }
-    });
-  }, []);
-
-  // Comentamos temporalmente la lógica real de Supabase para que no interfiera con el Mock
-  /*
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // 1. Verificar sesión actual al cargar
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user || null);
       setLoading(false);
-    });
+    };
 
+    checkSession();
+
+    // 2. Escuchar cambios de estado (Login/Logout)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user || null);
     });
 
     return () => subscription.unsubscribe();
   }, []);
-  */
+
+  // --- REDIRECCIÓN DINÁMICA POR ROL ---
+  const redirectByRole = (role) => {
+    switch (role) {
+      case 'Administrador':
+        navigate('/finanzas'); // O a tu panel principal de admin
+        break;
+      case 'Empleado':
+        navigate('/admin-inventario'); // O la ruta que definas para empleado
+        break;
+      case 'Cliente':
+        navigate('/catalogo');
+        break;
+      default:
+        navigate('/');
+    }
+  };
 
   const handleAuthSuccess = (userData) => {
     setUser(userData);
-    navigate('/dashboard'); 
+    const role = userData?.user_metadata?.rol || 'Cliente';
+    redirectByRole(role);
   };
 
   const handleLogout = async () => {
-    // Si usas el mock, simplemente limpia el estado
+    await supabase.auth.signOut();
     setUser(null);
     navigate('/');
-    // await supabase.auth.signOut(); // Descomentar cuando uses la DB real
   };
 
   if (loading) {
@@ -89,41 +99,40 @@ function App() {
       />
       
       <Routes>
-        {/* HomePage necesita los datos para que su Header interno sepa quién está logueado */}
-        <Route path="/" element={
-          <HomePage 
-            isLoggedIn={!!user} 
-            user={user} 
-            userRole={userRole} 
-            onLogout={handleLogout} 
-          />
-        } />
-        
-        <Route path="/catalogo" element={
-          <CatalogPage 
-            isLoggedIn={!!user} 
-            user={user} 
-            userRole={userRole} 
-            onLogout={handleLogout} 
-          />
-        } />
-
-        {/* AuthAccount (Login) normalmente no lleva el menú completo, pero si lo requiere: */}
-        <Route path="/login" element={
-            !user ? <AuthAccount onAuthSuccess={handleAuthSuccess} /> : <Navigate to="/dashboard" />
-        } />
-
-        {/* Dashboards ya suelen recibir el user, pero asegúrate de pasar userRole */}
-        <Route path="/dashboard" element={
-          user ? (
-            userRole === 'Administrador' || userRole === 'Empleado' 
-              ? <AdminDashboard user={user} userRole={userRole} onLogout={handleLogout} /> 
-              : <ClientDashboard user={user} userRole={userRole} onLogout={handleLogout} />
-          ) : <Navigate to="/login" />
-        } />
-
         {/* Redirección por defecto */}
         <Route path="*" element={<Navigate to="/" />} />
+
+        {/* ---- R U T A S - P U B L I C A S */}
+        <Route path="/" element={<HomePage isLoggedIn={!!user} user={user} userRole={userRole} onLogout={handleLogout} />} />
+        <Route path="/catalogo" element={<CatalogPage isLoggedIn={!!user} user={user} userRole={userRole} onLogout={handleLogout} />} />
+        
+        {/* LOGIN CON REDIRECCIÓN INTELIGENTE */}
+        <Route path="/login" element={
+          !user ? (
+            <AuthAccount onAuthSuccess={handleAuthSuccess} />
+          ) : (
+            // Si el usuario ya está logueado e intenta entrar a /login, lo mandamos a su sitio
+            userRole === 'Administrador' ? <Navigate to="/finanzas" /> : <Navigate to="/catalogo" />
+          )
+        } />
+
+        {/* ---- R U T A S - A D M I N I S T R A D O R */}
+        <Route 
+          path="/finanzas" 
+          element={user && userRole === 'Administrador' ? <FinanzasPage /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/admin-inventario" 
+          element={user && (userRole === 'Administrador' || userRole === 'Empleado') ? <InventarioAdmin /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/admin-empleados" 
+          element={user && userRole === 'Administrador' ? <Empleados /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/admin-horarios" 
+          element={user && userRole === 'Administrador' ? <Horarios /> : <Navigate to="/login" />} 
+        />
       </Routes>
       <Footer />
       <Toaster />

@@ -90,3 +90,24 @@ CREATE TABLE detalle (
     id_transaccion INT REFERENCES transaccion(id_transaccion),
     id_producto INT REFERENCES producto(id_producto)
 );
+
+CREATE TABLE horario_atencion (
+    id_horario SERIAL PRIMARY KEY,
+    dia_semana INT NOT NULL, -- 0 para Domingo, 1 para Lunes, etc.
+    dia_nombre VARCHAR(15) NOT NULL, -- 'Lunes', 'Martes'...
+    apertura TIME NOT NULL,
+    cierre TIME NOT NULL,
+    intervalo_minutos INT DEFAULT 30, -- Para definir citas cada 30, 45 o 60 min
+    esta_activo BOOLEAN DEFAULT true, -- Para marcar si la óptica abre ese día
+    ultima_modificacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insertar datos iniciales (Configuración por defecto)
+INSERT INTO horario_atencion (dia_semana, dia_nombre, apertura, cierre, intervalo_minutos, esta_activo) VALUES
+(1, 'Lunes', '09:00', '18:00', 30, true),
+(2, 'Martes', '09:00', '18:00', 30, true),
+(3, 'Miércoles', '09:00', '18:00', 30, true),
+(4, 'Jueves', '09:00', '18:00', 30, true),
+(5, 'Viernes', '09:00', '18:00', 30, true),
+(6, 'Sábado', '10:00', '14:00', 60, true),
+(0, 'Domingo', '00:00', '00:00', 0, false);

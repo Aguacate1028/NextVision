@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
 import { supabase } from '../lib/supabaseClient';
 import { ShoppingCart, Search, Filter, Eye } from 'lucide-react';
 import { Button } from '../UI/button';
