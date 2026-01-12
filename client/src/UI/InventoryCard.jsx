@@ -24,27 +24,47 @@ export const InventoryCard = ({ item, type, onEdit, onDelete, confirmDelete, set
           <div className="flex gap-2 w-full">
             <button onClick={() => setConfirmDelete(null)} className="flex-1 py-3 bg-slate-100 text-slate-500 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-slate-200 transition-all">Cancelar</button>
             <button 
-  onClick={onDelete} // <--- Asegúrate de que esta prop esté aquí
-  className="flex-1 py-3 bg-red-500 text-white rounded-xl font-black text-[9px] uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-600 transition-all"
->
-  Eliminar
-</button>
+              onClick={onDelete} 
+              className="flex-1 py-3 bg-red-500 text-white rounded-xl font-black text-[9px] uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-600 transition-all"
+            >
+              Eliminar
+            </button>
           </div>
         </div>
       )}
 
       {isProduct ? (
         <div className="bg-white p-6 rounded-[2.5rem] shadow-xl shadow-blue-900/5 border border-white">
-          <div className="h-44 bg-slate-50 rounded-3xl mb-6 flex items-center justify-center relative group-hover:bg-blue-50 transition-colors">
-            <ImageIcon size={48} className="text-slate-200 group-hover:text-blue-200 transition-colors" />
-            <div className="absolute bottom-4 left-4 bg-white/90 px-3 py-1 rounded-full border border-blue-50">
-              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Stock: {item.stock}</span>
-            </div>
-          </div>
+          {/* --- CAMBIO AQUÍ: RENDERIZADO DE IMAGEN --- */}
+          <div className="h-44 bg-slate-50 rounded-3xl mb-6 flex items-center justify-center relative group-hover:bg-blue-50 transition-colors overflow-hidden">
+            {item.imagen_producto ? (
+    <img 
+      src={item.imagen_producto} 
+      alt={item.nombre} 
+      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+      onError={(e) => {
+        e.target.src = ""; // Si falla la carga, limpia para mostrar el icono
+        console.error("Error al cargar la imagen Base64");
+      }}
+    />
+  ) : (
+    <ImageIcon size={48} className="text-slate-200 group-hover:text-blue-200 transition-colors" />
+  )}
+  
+  <div className="absolute bottom-4 left-4 bg-white/90 px-3 py-1 rounded-full border border-blue-50 shadow-sm">
+    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">
+      Stock: {item.stock}
+    </span>
+  </div>
+</div>
+          {/* ---------------------------------------- */}
+
           <h3 className="text-lg font-black text-slate-800 tracking-tight mb-1">{item.nombre}</h3>
           <p className="text-xs font-bold text-slate-400 mb-6 line-clamp-1 italic">{item.descripcion}</p>
           <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-            <span className="text-2xl font-black text-slate-900 tracking-tighter">${item.precio}</span>
+            <span className="text-2xl font-black text-slate-900 tracking-tighter">
+              ${Number(item.precio).toLocaleString('es-MX')}
+            </span>
             <button onClick={() => onEdit(item)} className="px-5 py-2.5 bg-blue-50 text-blue-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all flex items-center gap-2">
               <Edit3 size={14}/> Editar
             </button>

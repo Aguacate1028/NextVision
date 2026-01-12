@@ -1,40 +1,59 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { Store, Search, Eye, ShoppingCart } from 'lucide-react'; // Añadidos Eye y ShoppingCart
-import { ProductCard } from '../UI/ProductCard';
+import { Store, Search, ImageIcon, ShoppingCart, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
-// 1. Unificamos la función y sus props
 export function CatalogPage({ isLoggedIn }) {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState(['Todos']); // Estado para categorías dinámicas
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('Todos');
 
   useEffect(() => {
-    async function fetchProducts() {
+    async function fetchData() {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('producto')
-        .select('*, categoria(nombre)');
-      
-      if (!error) setProducts(data || []);
-      setLoading(false);
+      try {
+        // 1. Obtener Productos con su categoría (JOIN)
+        const { data: prodData, error: prodError } = await supabase
+          .from('producto')
+          .select('*, categoria(nombre)');
+        
+        // 2. Obtener todas las Categorías existentes para los botones de filtro
+        const { data: catData, error: catError } = await supabase
+          .from('categoria')
+          .select('nombre');
+
+        if (prodError || catError) throw prodError || catError;
+
+        setProducts(prodData || []);
+        
+        // Creamos la lista de filtros: 'Todos' + las categorías de la DB
+        if (catData) {
+          const names = catData.map(c => c.nombre);
+          setCategories(['Todos', ...names]);
+        }
+      } catch (error) {
+        console.error("Error al cargar catálogo:", error.message);
+        toast.error("Error al cargar los datos");
+      } finally {
+        setLoading(false);
+      }
     }
-    fetchProducts();
+    fetchData();
   }, []);
 
-  // 2. Manejo de acción del producto
   const handleProductAction = (productId) => {
     if (!isLoggedIn) {
       navigate('/login');
     } else {
-      console.log("Añadiendo al carrito o viendo producto:", productId);
-      // Aquí puedes añadir tu lógica de carrito
+      toast.success("Producto visualizado");
+      // Lógica de carrito aquí
     }
   };
 
-  // 3. Lógica de filtrado corregida
+  // Lógica de filtrado
   const filteredProducts = filter === 'Todos' 
     ? products 
     : products.filter(p => p.categoria?.nombre === filter);
@@ -57,9 +76,9 @@ export function CatalogPage({ isLoggedIn }) {
           </div>
         </div>
 
-        {/* Filtros */}
+        {/* Filtros Dinámicos */}
         <div className="flex flex-wrap justify-center gap-3 mb-12">
-          {['Todos', 'Armazones', 'Lentes de Sol', 'Accesorios'].map((cat) => (
+          {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setFilter(cat)}
@@ -77,38 +96,52 @@ export function CatalogPage({ isLoggedIn }) {
         {/* Estado de Carga */}
         {loading ? (
           <div className="flex flex-col justify-center items-center py-20 gap-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <p className="text-blue-600 font-bold animate-pulse">Cargando productos...</p>
+            <Loader2 className="animate-spin text-blue-600" size={48} />
+            <p className="text-blue-600 font-bold animate-pulse uppercase tracking-widest text-xs">Cargando catálogo real...</p>
           </div>
         ) : (
           <>
             {filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                 {filteredProducts.map((product) => (
-                  /* 4. Usamos el componente ProductCard o el diseño manual */
                   <div 
                     key={product.id_producto} 
-                    className="bg-white rounded-[35px] p-6 shadow-xl shadow-blue-100/50 border border-white hover:scale-105 transition-transform group"
+                    className="bg-white rounded-[35px] p-6 shadow-xl shadow-blue-100/50 border border-white hover:scale-105 transition-transform group flex flex-col"
                   >
+                    {/* Contenedor de Imagen Actualizado */}
                     <div className="bg-slate-50 rounded-[25px] h-48 mb-4 flex items-center justify-center relative overflow-hidden">
-                      <Eye className="text-slate-200 w-20 h-20" />
+                      {product.imagen_producto ? (
+                        <img 
+                          src={product.imagen_producto} 
+                          alt={product.nombre}
+                          className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-500"
+                        />
+                      ) : (
+                        <ImageIcon className="text-slate-200 w-16 h-16" />
+                      )}
+                      
+                      {/* Badge de Stock */}
+                      <div className="absolute top-3 right-3 bg-white/90 backdrop-blur px-3 py-1 rounded-full border border-slate-100">
+                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-tighter">
+                          Stock: {product.stock}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-2 flex-1 flex flex-col">
                       <span className="text-[10px] font-black uppercase tracking-widest text-blue-500">
                         {product.categoria?.nombre || 'General'}
                       </span>
-                      <h3 className="text-lg font-bold text-slate-900 truncate">{product.nombre}</h3>
-                      <p className="text-2xl font-black text-blue-600">${product.precio}</p>
+                      <h3 className="text-lg font-bold text-slate-900 line-clamp-1">{product.nombre}</h3>
+                      <p className="text-xs text-slate-400 line-clamp-2 italic mb-2">
+                        {product.descripcion || "Sin descripción disponible"}
+                      </p>
                       
-                      <div className="pt-4">
-                        <button 
-                          onClick={() => handleProductAction(product.id_producto)}
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-full flex items-center justify-center gap-2 font-bold transition-colors"
-                        >
-                          <ShoppingCart size={18} />
-                          {isLoggedIn ? 'Añadir al carrito' : 'Ver detalles'}
-                        </button>
+                      <div className="mt-auto pt-4 flex flex-col gap-3">
+                        <p className="text-2xl font-black text-slate-900">
+                          ${Number(product.precio).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                        </p>
+                        
                       </div>
                     </div>
                   </div>
@@ -117,7 +150,7 @@ export function CatalogPage({ isLoggedIn }) {
             ) : (
               <div className="text-center py-20 bg-white rounded-[40px] border border-dashed border-slate-200">
                 <Search className="mx-auto text-slate-200 w-16 h-16 mb-4" />
-                <p className="text-slate-400 font-bold uppercase tracking-widest">No se encontraron productos</p>
+                <p className="text-slate-400 font-bold uppercase tracking-widest">No hay productos en esta categoría</p>
               </div>
             )}
           </>

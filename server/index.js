@@ -4,14 +4,17 @@ import morgan from 'morgan';
 import { testConnection } from './supabase.js';
 import userRoutes from './routes/userRoutes.js';
 
-
 const app = express();
 
-// Middlewares necesarios
-app.use(cors()); // Permite peticiones del client
-app.use(express.json()); // Permite recibir cuerpos JSON (para agendar citas o ventas)
-app.use(morgan('dev')); // Loguea las peticiones en consola para depuración
+// Middlewares - CONFIGURACIÓN ÚNICA Y ORDENADA
+app.use(cors());
+app.use(morgan('dev'));
 
+// Configuración de JSON con límite (Solo una vez)
+app.use(express.json({ limit: '10mb' })); 
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// Rutas
 app.use('/api/users', userRoutes);
 
 const PORT = process.env.PORT || 5000;

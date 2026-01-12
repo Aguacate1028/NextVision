@@ -1,18 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Check, Loader2, Upload } from 'lucide-react';
+import { X, Check, Loader2, Upload, ChevronDown } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-export const InventoryModal = ({ isOpen, onClose, activeTab, editingItem, onSuccess }) => {
+export const InventoryModal = ({ isOpen, onClose, activeTab, editingItem, categorias = [], onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
-import React, { useState, useRef } from 'react';
-import { X, Check, Upload, Image as ImageIcon, ChevronDown } from 'lucide-react';
-
-export const InventoryModal = ({ isOpen, onClose, activeTab, editingItem, categorias = [] }) => {
-  const [imagePreview, setImagePreview] = useState(editingItem?.imagen_producto || null);
   const fileInputRef = useRef(null);
 
-  // Estado inicial del formulario adaptado a ambas tablas
   const [formData, setFormData] = useState({
     nombre: '',
     descripcion: '',
@@ -21,7 +15,6 @@ export const InventoryModal = ({ isOpen, onClose, activeTab, editingItem, catego
     id_categoria: ''
   });
 
-  // Efecto para limpiar o cargar datos al abrir/editar
   useEffect(() => {
     if (isOpen) {
       if (editingItem) {
@@ -34,6 +27,7 @@ export const InventoryModal = ({ isOpen, onClose, activeTab, editingItem, catego
         });
         setImagePreview(editingItem.imagen_producto || null);
       } else {
+        // Limpia el formulario al abrir para "Nuevo Producto"
         setFormData({ nombre: '', descripcion: '', precio: '', stock: '', id_categoria: '' });
         setImagePreview(null);
       }
@@ -43,6 +37,10 @@ export const InventoryModal = ({ isOpen, onClose, activeTab, editingItem, catego
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("La imagen es muy pesada (máx 2MB)");
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => setImagePreview(reader.result);
       reader.readAsDataURL(file);
@@ -53,37 +51,56 @@ export const InventoryModal = ({ isOpen, onClose, activeTab, editingItem, catego
     e.preventDefault();
     setLoading(true);
 
-    const isEditing = !!editingItem;
     const isProduct = activeTab === 'productos';
+    const isEditing = !!editingItem;
     
-    // Configuración de URL según el tipo y si es edición
+    // Configuración de URL dinámica
     const baseUrl = 'http://localhost:5000/api/users';
-    const endpoint = isProduct ? '/productos' : '';
-    const id = isEditing ? (isProduct ? editingItem.id_producto : editingItem.id_categoria) : '';
+    const endpoint = isProduct ? '/productos' : ''; 
     
-    const url = isEditing ? `${baseUrl}${endpoint}/${id}` : `${baseUrl}${endpoint}/`;
-    const method = isEditing ? 'PUT' : 'POST';
+    // Si editamos: baseUrl/productos/id. Si creamos: baseUrl/productos
+    const url = isEditing 
+      ? `${baseUrl}${endpoint}/${isProduct ? editingItem.id_producto : editingItem.id_categoria}`
+      : `${baseUrl}${endpoint}`;
+
+    const bodyPayload = isProduct ? {
+      nombre: formData.nombre,
+      descripcion: formData.descripcion,
+      precio: parseFloat(formData.precio),
+      stock: parseInt(formData.stock),
+      id_categoria: parseInt(formData.id_categoria),
+      imagen_producto: imagePreview 
+    } : {
+      nombre: formData.nombre,
+      descripcion: formData.descripcion
+    };
 
     try {
       const response = await fetch(url, {
-        method: method,
+        method: isEditing ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          imagen_producto: imagePreview // Enviamos la imagen en base64
-        })
+        body: JSON.stringify(bodyPayload)
       });
 
+      // Manejo de errores de ruta (HTML en lugar de JSON)
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        console.error("Error del servidor (no es JSON):", await response.text());
+        throw new Error(`Error ${response.status}: Ruta '${url}' no encontrada en el servidor.`);
+      }
+
+      const result = await response.json();
+
       if (response.ok) {
-        toast.success(`${isProduct ? 'Producto' : 'Categoría'} guardada con éxito`);
-        onSuccess();
+        toast.success(`Registro ${isEditing ? 'actualizado' : 'creado'} con éxito`);
+        if (onSuccess) onSuccess();
         onClose();
       } else {
-        const errorData = await response.json();
-        toast.error(errorData.error || "Error en la operación");
+        throw new Error(result.error || "Error en el servidor");
       }
     } catch (error) {
-      toast.error("Error de conexión con el servidor");
+      console.error("Error en submit:", error);
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -101,7 +118,7 @@ export const InventoryModal = ({ isOpen, onClose, activeTab, editingItem, catego
         
         <header className="mb-10">
           <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-2 block italic">
-            Gestión de {activeTab}
+            INVENTARIO PRO
           </span>
           <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">
             {editingItem ? 'Editar' : 'Nuevo'} {activeTab === 'productos' ? 'Producto' : 'Categoría'}
@@ -109,21 +126,19 @@ export const InventoryModal = ({ isOpen, onClose, activeTab, editingItem, catego
         </header>
         
         <form onSubmit={handleSubmit} className="space-y-6">
-          
-          {/* SECCIÓN DE IMAGEN (Solo para productos) */}
           {activeTab === 'productos' && (
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase text-slate-400 ml-5 tracking-widest">Imagen del Producto</label>
+              <label className="text-[10px] font-black uppercase text-slate-400 ml-5 tracking-widest">Fotografía</label>
               <div 
                 onClick={() => fileInputRef.current.click()}
-                className="w-full h-40 bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2rem] flex flex-col items-center justify-center cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-all overflow-hidden group"
+                className="w-full h-48 bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2rem] flex flex-col items-center justify-center cursor-pointer hover:bg-blue-50 transition-all overflow-hidden group"
               >
                 {imagePreview ? (
                   <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                 ) : (
                   <>
                     <Upload className="text-slate-300 group-hover:text-blue-400 mb-2" size={32} />
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Subir Fotografía</span>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Subir Imagen</span>
                   </>
                 )}
                 <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
@@ -137,25 +152,24 @@ export const InventoryModal = ({ isOpen, onClose, activeTab, editingItem, catego
               required
               value={formData.nombre}
               onChange={(e) => setFormData({...formData, nombre: e.target.value})}
-              className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-8 py-5 font-bold text-slate-700 outline-none focus:border-blue-100 focus:bg-white transition-all shadow-inner" 
-              placeholder="Ej: Armazones Premium" 
+              className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-8 py-5 font-bold text-slate-700 outline-none focus:border-blue-100" 
+              placeholder="Ej. Armazón Premium" 
             />
           </div>
 
-          {/* SELECT DE CATEGORÍA (Solo para productos) */}
           {activeTab === 'productos' && (
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase text-slate-400 ml-5 tracking-widest">Categoría</label>
               <div className="relative">
                 <select 
-                  defaultValue={editingItem?.id_categoria || ''}
-                  className="w-full bg-blue-50 border-none rounded-[1.5rem] px-8 py-4 font-black text-blue-600 outline-none appearance-none cursor-pointer shadow-sm focus:ring-2 focus:ring-blue-200 transition-all"
+                  required
+                  value={formData.id_categoria}
+                  onChange={(e) => setFormData({...formData, id_categoria: e.target.value})}
+                  className="w-full bg-blue-50 border-none rounded-[1.5rem] px-8 py-5 font-black text-blue-600 outline-none appearance-none cursor-pointer"
                 >
                   <option value="" disabled>Seleccionar categoría...</option>
                   {categorias.map(cat => (
-                    <option key={cat.id_categoria} value={cat.id_categoria}>
-                      {cat.nombre}
-                    </option>
+                    <option key={cat.id_categoria} value={cat.id_categoria}>{cat.nombre}</option>
                   ))}
                 </select>
                 <ChevronDown size={18} className="absolute right-6 top-1/2 -translate-y-1/2 text-blue-400 pointer-events-none" />
@@ -168,23 +182,17 @@ export const InventoryModal = ({ isOpen, onClose, activeTab, editingItem, catego
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase text-slate-400 ml-5 tracking-widest">Precio</label>
                 <input 
-                  required
-                  type="number"
-                  value={formData.precio}
+                  required type="number" step="0.01" value={formData.precio}
                   onChange={(e) => setFormData({...formData, precio: e.target.value})}
-                  className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-8 py-5 font-bold text-slate-700 outline-none focus:border-blue-100 shadow-inner" 
-                  placeholder="0.00" 
+                  className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-8 py-5 font-bold" 
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase text-slate-400 ml-5 tracking-widest">Stock</label>
                 <input 
-                  required
-                  type="number"
-                  value={formData.stock}
+                  required type="number" value={formData.stock}
                   onChange={(e) => setFormData({...formData, stock: e.target.value})}
-                  className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-8 py-5 font-bold text-slate-700 outline-none focus:border-blue-100 shadow-inner" 
-                  placeholder="0" 
+                  className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-8 py-5 font-bold" 
                 />
               </div>
             </div>
@@ -195,15 +203,13 @@ export const InventoryModal = ({ isOpen, onClose, activeTab, editingItem, catego
             <textarea 
               value={formData.descripcion}
               onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
-              className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-8 py-5 font-bold text-slate-700 outline-none focus:border-blue-100 focus:bg-white transition-all shadow-inner h-24 resize-none" 
-              placeholder="Detalles técnicos o de estilo..." 
+              className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-8 py-5 font-bold h-28 resize-none" 
             />
           </div>
 
           <button 
-            type="submit" 
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-6 rounded-[1.5rem] font-black uppercase tracking-[0.25em] shadow-2xl shadow-blue-200 hover:bg-blue-700 hover:-translate-y-1 transition-all mt-6 flex items-center justify-center gap-3 disabled:opacity-70"
+            type="submit" disabled={loading}
+            className="w-full bg-blue-600 text-white py-6 rounded-[1.5rem] font-black uppercase tracking-[0.25em] shadow-2xl hover:bg-blue-700 transition-all flex items-center justify-center gap-3 disabled:opacity-70"
           >
             {loading ? <Loader2 className="animate-spin" /> : <Check size={20}/>}
             {editingItem ? 'Actualizar Registro' : 'Confirmar Registro'}

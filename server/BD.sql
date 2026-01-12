@@ -36,7 +36,7 @@ CREATE TABLE consulta (
     fecha_hora TIMESTAMP WITH TIME ZONE, -- Formato correcto para Postgres
     estado VARCHAR(30) DEFAULT 'Agendada',
     descripcion TEXT,
-    id_cliente INT REFERENCES cliente(id_cliente),
+    id_usuario INT REFERENCES usuario(id_usuario),
     id_personal INT REFERENCES personal(id_personal)
 );
 

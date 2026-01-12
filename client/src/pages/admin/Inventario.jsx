@@ -14,31 +14,31 @@ const Inventario = () => {
   const [editingItem, setEditingItem] = useState(null);
 
   // --- 1. CARGA DE DATOS DESDE EL BACKEND ---
-const fetchInventario = async () => {
-  try {
-    setLoading(true);
-    
-    // Ejecutamos ambas peticiones en paralelo para que sea más rápido
-    const [resCat, resProd] = await Promise.all([
-      fetch('http://localhost:5000/api/users/'),
-      fetch('http://localhost:5000/api/users/productos')
-    ]);
+  const fetchInventario = async () => {
+    try {
+      setLoading(true);
+      
+      // Cargamos categorías y productos en paralelo
+      const [resCat, resProd] = await Promise.all([
+        fetch('http://localhost:5000/api/users/'),
+        fetch('http://localhost:5000/api/users/productos')
+      ]);
 
-    const dataCat = await resCat.json();
-    const dataProd = await resProd.json();
+      const dataCat = await resCat.json();
+      const dataProd = await resProd.json();
 
-    setItems({
-      categorias: Array.isArray(dataCat) ? dataCat : [],
-      productos: Array.isArray(dataProd) ? dataProd : []
-    });
-    
-  } catch (error) {
-    console.error("Error cargando inventario:", error);
-    toast.error("Error al conectar con el servidor");
-  } finally {
-    setLoading(false);
-  }
-};
+      setItems({
+        categorias: Array.isArray(dataCat) ? dataCat : [],
+        productos: Array.isArray(dataProd) ? dataProd : []
+      });
+      
+    } catch (error) {
+      console.error("Error cargando inventario:", error);
+      toast.error("Error al conectar con el servidor");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchInventario();
@@ -57,28 +57,30 @@ const fetchInventario = async () => {
 
   const handleDelete = async (id) => {
     try {
-        const response = await fetch(`http://localhost:5000/api/users/${id}`, {
-            method: 'DELETE',
-        });
+      // Ajustamos la URL según lo que estemos borrando
+      const endpoint = activeTab === 'productos' ? '/productos' : '';
+      const response = await fetch(`http://localhost:5000/api/users${endpoint}/${id}`, {
+        method: 'DELETE',
+      });
 
-        if (response.ok) {
-            toast.success("Categoría eliminada correctamente");
-            setConfirmDelete(null); // Cerramos el estado de confirmación
-            fetchInventario();      // Recargamos la lista automáticamente
-        } else {
-            const errorData = await response.json();
-            toast.error(errorData.error || "No se pudo eliminar");
-        }
+      if (response.ok) {
+        toast.success(`${activeTab === 'productos' ? 'Producto' : 'Categoría'} eliminado`);
+        setConfirmDelete(null);
+        fetchInventario(); // Recarga la lista
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || "No se pudo eliminar");
+      }
     } catch (error) {
-        console.error("Error al eliminar:", error);
-        toast.error("Error de conexión con el servidor");
+      console.error("Error al eliminar:", error);
+      toast.error("Error de conexión");
     }
-};
+  };
 
   // --- 3. FILTRADO ---
   const filteredItems = activeTab === 'productos' 
-  ? items.productos.filter(p => p.nombre?.toLowerCase().includes(searchTerm.toLowerCase()))
-  : items.categorias.filter(c => c.nombre?.toLowerCase().includes(searchTerm.toLowerCase()));
+    ? items.productos.filter(p => p.nombre?.toLowerCase().includes(searchTerm.toLowerCase()))
+    : items.categorias.filter(c => c.nombre?.toLowerCase().includes(searchTerm.toLowerCase()));
 
   if (loading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#F0F7FF] font-sans">
@@ -120,12 +122,15 @@ const fetchInventario = async () => {
           </div>
         </header>
 
-        {/* SELECTOR DE PESTAÑAS (TABS) */}
+        {/* SELECTOR DE PESTAÑAS */}
         <div className="flex gap-2 mb-10 bg-slate-200/50 p-1.5 rounded-[2rem] w-fit border border-white">
           {['productos', 'categorias'].map((tab) => (
             <button 
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => {
+                setActiveTab(tab);
+                setSearchTerm(''); // Limpia búsqueda al cambiar de pestaña
+              }}
               className={`px-10 py-3 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest transition-all ${
                 activeTab === tab 
                 ? 'bg-white text-blue-600 shadow-sm' 
@@ -142,17 +147,14 @@ const fetchInventario = async () => {
           {filteredItems.length > 0 ? (
             filteredItems.map(item => (
               <InventoryCard 
-              key={activeTab === 'productos' ? item.id_producto : item.id_categoria}
-              item={item}
-              type={activeTab}
-              onEdit={openEditModal}
-              
-              // ESTO ES LO QUE HACE QUE EL BOTÓN FUNCIONE:
-              onDelete={() => handleDelete(activeTab === 'productos' ? item.id_producto : item.id_categoria)}
-              
-              confirmDelete={confirmDelete}
-              setConfirmDelete={setConfirmDelete}
-            />
+                key={activeTab === 'productos' ? item.id_producto : item.id_categoria}
+                item={item}
+                type={activeTab}
+                onEdit={openEditModal}
+                onDelete={() => handleDelete(activeTab === 'productos' ? item.id_producto : item.id_categoria)}
+                confirmDelete={confirmDelete}
+                setConfirmDelete={setConfirmDelete}
+              />
             ))
           ) : (
             <div className="col-span-full py-20 text-center bg-white/40 rounded-[3rem] border-2 border-dashed border-slate-200">
@@ -170,11 +172,8 @@ const fetchInventario = async () => {
         onClose={() => setShowModal(false)} 
         activeTab={activeTab} 
         editingItem={editingItem}
-<<<<<<< HEAD
-        onSuccess={fetchInventario} // Esta función recarga la lista al guardar
-=======
+        onSuccess={fetchInventario} 
         categorias={items.categorias}
->>>>>>> origin/main
       />
     </div>
   );

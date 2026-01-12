@@ -24,7 +24,7 @@ export function AuthAccount({ onAuthSuccess }) {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-   const handleLogin = async (e) => {
+const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -44,18 +44,20 @@ export function AuthAccount({ onAuthSuccess }) {
             throw new Error(result.error || 'Credenciales incorrectas');
         }
 
-        // 1. Notificación de éxito
+        // --- LÍNEA CLAVE ---
+        // Guardamos el objeto usuario completo en el LocalStorage
+        // Esto permite que el Historial lea el 'id_usuario' después
+        localStorage.setItem('user', JSON.stringify(result.user));
+        // ------------------
+
         toast.success("¡Bienvenido de nuevo!");
         
-        // 2. Avisar a la App que el usuario ya entró (si usas esa función)
         if (onAuthSuccess) {
             onAuthSuccess(result.user, result.session);
         }
 
-        // 3. ¡LA REDIRECCIÓN! 
-        // Asegúrate de que '/' sea la ruta donde está tu Home.jsx
-
-        const role = result.user?.user_metadata?.rol || 'Cliente';
+        // Determinamos el rol (verificando tanto metadata como campo directo por si acaso)
+        const role = result.user?.user_metadata?.rol || result.user?.rol || 'Cliente';
 
         setTimeout(() => {
             if (role === 'Administrador') {
@@ -63,7 +65,7 @@ export function AuthAccount({ onAuthSuccess }) {
             } else if (role === 'Empleado') {
                 navigate('/Empleado');
             } else {
-                navigate('/catalogo'); // O '/' si quieres el Home para clientes
+                navigate('/catalogo'); 
             }
         }, 500);
 

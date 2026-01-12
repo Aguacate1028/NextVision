@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalIcon, Loader2, X, AlertCircle } from 'lucide-react';
-import { citasClienteMock } from '../../mocks/citasClienteMock';
+import { Calendar as CalIcon, Loader2, ClipboardList, AlertCircle } from 'lucide-react';
 import { CitaClienteCard } from '../../UI/CitaClienteCard';
+import toast from 'react-hot-toast';
 
 const Citas = () => {
   const [citas, setCitas] = useState([]);
@@ -10,19 +10,43 @@ const Citas = () => {
   const [cancelModal, setCancelModal] = useState(null);
 
   useEffect(() => {
-    setTimeout(() => {
-      setCitas(citasClienteMock);
-      setLoading(false);
-    }, 600);
+    const fetchCitasDinamicas = async () => {
+      try {
+        setLoading(true);
+        const sesionString = localStorage.getItem('user');
+        
+        if (!sesionString) {
+          toast.error("Sesión no válida. Inicia sesión de nuevo.");
+          return;
+        }
+
+        const usuarioLogueado = JSON.parse(sesionString);
+        const idUsuario = usuarioLogueado.id_usuario || usuarioLogueado.id;
+
+        const response = await fetch(`http://localhost:5000/api/users/consultas/${idUsuario}`);
+        if (!response.ok) throw new Error("Error al obtener citas");
+
+        const data = await response.json();
+        setCitas(data);
+      } catch (error) {
+        console.error(error);
+        toast.error("No se pudo conectar con el servidor");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCitasDinamicas();
   }, []);
 
-  // Lógica de calendario simple para el mes actual
+  // Lógica del mini calendario
   const today = new Date();
   const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
   const citaDays = citas.map(c => new Date(c.fecha_hora).getDate());
 
+  // Filtrado por pestañas
   const filteredCitas = citas.filter(c => 
-    filter === 'Proximas' ? c.estado === 'Agendada' : c.estado === 'Completada'
+    filter === 'Proximas' ? c.estado === 'Agendada' : c.estado !== 'Agendada'
   );
 
   if (loading) return (
@@ -35,7 +59,7 @@ const Citas = () => {
     <div className="min-h-screen bg-[#F0F7FF] p-6 lg:p-10 font-sans">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10">
         
-        {/* LADO IZQUIERDO: Calendario y Estadísticas */}
+        {/* LADO IZQUIERDO */}
         <aside className="lg:col-span-4 space-y-8">
           <header>
             <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase mb-2">
@@ -44,10 +68,9 @@ const Citas = () => {
             <p className="text-slate-400 font-bold text-xs tracking-[0.2em] uppercase">Control de visitas ópticas</p>
           </header>
 
-          {/* Mini Calendario Visual */}
           <div className="bg-white p-8 rounded-[3rem] shadow-xl shadow-blue-900/5 border border-white">
-            <h3 className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-6 flex items-center gap-2">
-              <CalIcon size={14} /> Calendario {today.toLocaleDateString('es-ES', { month: 'long' })}
+            <h3 className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-6 flex items-center gap-2 text-center justify-center">
+              <CalIcon size={14} /> {today.toLocaleDateString('es-ES', { month: 'long' })} {today.getFullYear()}
             </h3>
             <div className="grid grid-cols-7 gap-2">
               {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map(d => (
@@ -58,13 +81,10 @@ const Citas = () => {
                 const hasCita = citaDays.includes(day);
                 const isToday = day === today.getDate();
                 return (
-                  <div 
-                    key={i} 
-                    className={`h-8 flex items-center justify-center rounded-xl text-[10px] font-black transition-all ${
-                      hasCita ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 
-                      isToday ? 'bg-slate-900 text-white' : 'text-slate-400 bg-slate-50'
-                    }`}
-                  >
+                  <div key={i} className={`h-8 flex items-center justify-center rounded-xl text-[10px] font-black transition-all ${
+                    hasCita ? 'bg-blue-600 text-white shadow-lg' : 
+                    isToday ? 'bg-slate-900 text-white' : 'text-slate-400 bg-slate-50'
+                  }`}>
                     {day}
                   </div>
                 );
@@ -73,18 +93,14 @@ const Citas = () => {
           </div>
         </aside>
 
-        {/* LADO DERECHO: Listado */}
+        {/* LADO DERECHO */}
         <main className="lg:col-span-8">
           <div className="flex gap-2 mb-8 bg-white p-1.5 rounded-[2rem] w-fit shadow-sm border border-blue-50">
             {['Proximas', 'Pasadas'].map(tab => (
-              <button 
-                key={tab}
-                onClick={() => setFilter(tab)}
-                className={`px-10 py-3 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest transition-all ${
-                  filter === tab ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'
-                }`}
-              >
-                {tab === 'Proximas' ? 'Pendientes' : 'Completadas'}
+              <button key={tab} onClick={() => setFilter(tab)} className={`px-10 py-3 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest transition-all ${
+                filter === tab ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'
+              }`}>
+                {tab === 'Proximas' ? 'Pendientes' : 'Historial'}
               </button>
             ))}
           </div>
@@ -96,7 +112,8 @@ const Citas = () => {
               ))
             ) : (
               <div className="col-span-full py-20 text-center bg-white/50 border-4 border-dashed border-white rounded-[4rem]">
-                <p className="font-black text-slate-300 uppercase tracking-widest">No hay registros en esta sección</p>
+                <ClipboardList className="mx-auto text-slate-200 mb-4" size={48} />
+                <p className="font-black text-slate-300 uppercase tracking-widest text-xs">No hay citas en esta sección</p>
               </div>
             )}
           </div>
@@ -105,23 +122,24 @@ const Citas = () => {
 
       {/* Modal de Cancelación */}
       {cancelModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-md rounded-[3rem] p-12 shadow-2xl relative text-center">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-md rounded-[3rem] p-12 shadow-2xl text-center">
             <div className="w-20 h-20 bg-red-50 text-red-500 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6">
               <AlertCircle size={40} />
             </div>
             <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase mb-2">¿Cancelar Cita?</h2>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-10 leading-relaxed">
-              Esta acción liberará el horario de <span className="text-red-500">{new Date(cancelModal.fecha_hora).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} hrs</span> para otros pacientes.
+              ID de Cita: {cancelModal.id_consulta}
             </p>
             <div className="grid grid-cols-2 gap-4">
-              <button onClick={() => setCancelModal(null)} className="py-5 bg-slate-100 text-slate-500 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all">No, volver</button>
+              <button onClick={() => setCancelModal(null)} className="py-5 bg-slate-100 text-slate-500 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest">No, volver</button>
               <button 
                 onClick={() => {
-                  console.log("Cita cancelada:", cancelModal.id_consulta);
-                  setCancelModal(null);
-                }} 
-                className="py-5 bg-red-500 text-white rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest shadow-xl shadow-red-200 hover:bg-red-600 transition-all"
+                    // Aquí llamarías a la función de cancelar que crearemos después
+                    setCancelModal(null);
+                    toast.error("Funcionalidad de cancelación en desarrollo");
+                }}
+                className="py-5 bg-red-500 text-white rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest shadow-xl shadow-red-200"
               >
                 Sí, cancelar
               </button>
