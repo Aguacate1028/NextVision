@@ -424,33 +424,16 @@ export const createCita = async (req, res) => {
     const { id_usuario, fecha, hora, id_personal, descripcion } = req.body;
 
     try {
-        // 1. Formateamos la fecha y hora a ISO para comparar y guardar
-        // Usamos T para asegurar formato estándar: YYYY-MM-DDTHH:mm:00
+        // Combinamos fecha y hora en formato ISO para TIMESTAMP WITH TIME ZONE
         const fechaHoraISO = new Date(`${fecha}T${hora}:00`).toISOString();
 
-        // 2. VALIDACIÓN: Revisar si ya existe una cita "Agendada" en ese momento exacto
-        const { data: existente, error: errorCheck } = await supabase
-            .from('consulta')
-            .select('id_consulta')
-            .eq('fecha_hora', fechaHoraISO)
-            .eq('estado', 'Agendada')
-            .maybeSingle(); // Usamos maybeSingle para que no de error si no encuentra nada
-
-        if (existente) {
-            return res.status(400).json({ 
-                success: false, 
-                error: "Lo sentimos, este horario ya está reservado por otro paciente." 
-            });
-        }
-
-        // 3. INSERCIÓN: Si el horario está libre, procedemos
         const { data, error } = await supabase
             .from('consulta')
             .insert([
                 { 
                     fecha_hora: fechaHoraISO,
                     id_usuario: id_usuario,
-                    id_personal: id_personal || 1, // Por si el ID no viene del front
+                    id_personal: id_personal, // El ID del doctor/empleado logueado
                     descripcion: descripcion || 'Consulta general',
                     estado: 'Agendada'
                 }
@@ -459,19 +442,10 @@ export const createCita = async (req, res) => {
 
         if (error) throw error;
 
-        // 4. RESPUESTA EXITOSA
-        res.status(201).json({ 
-            success: true, 
-            message: "Cita agendada correctamente",
-            data: data[0] 
-        });
-
+        res.status(201).json({ success: true, data: data[0] });
     } catch (error) {
         console.error("Error al agendar:", error.message);
-        res.status(500).json({ 
-            success: false,
-            error: "Hubo un problema al registrar la cita en el servidor" 
-        });
+        res.status(500).json({ error: "Error al registrar la cita" });
     }
 };
 
@@ -484,13 +458,9 @@ export const getConsultas = async (req, res) => {
                 fecha_hora,
                 estado,
                 id_usuario,
-                usuario (
-                    email
-                )
+                usuario ( email )
             `);
-
         if (error) throw error;
-
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ error: error.message });
